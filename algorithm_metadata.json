@@ -1,0 +1,2383 @@
+{
+  "输入输出": [
+    {
+      "id": "export_data",
+      "name": "引出变量",
+      "description": "将当前的 DataFrame 数据导出到全局变量 \"{global_name}\" 中，以便在其他 Notebook 单元格或分析步骤中使用。导出成功后显示确认信息。",
+      "category": "输入输出",
+      "template": "# 引出变量\ndef export_data(df: pd.DataFrame, global_name: str = \"exported_data\") -> None:\n    \"\"\"\n    Export data to the global namespace.\n\n    Algorithm:\n        name: 引出变量\n        category: load_data\n        prompt: 将当前的 DataFrame 数据导出到全局变量 \"{global_name}\" 中，以便在其他 Notebook 单元格或分析步骤中使用。导出成功后显示确认信息。\n    \n    Parameters:\n    df (pandas.DataFrame): DataFrame to export.\n        role: input\n    global_name (str): 引出的全局变量名称\n        label: 全局变量名\n        priority: critical\n    \n    Returns:\n    None\n    \"\"\"\n    import globals\n    \n    try:\n        globals()[global_name] = df\n        print(f\"Successfully exported to global variable: '{global_name}'\")\n        if hasattr(df, 'shape'):\n            print(f\"Variable shape: {df.shape}\")\n        if hasattr(df, 'head'):\n            print(f\"Variable preview:\")\n            display(df.head())\n    except Exception as e:\n        print(f\"Export failed: {e}\")\n        return None\n    return None\n",
+      "imports": [
+        "import globals"
+      ],
+      "args": [
+        {
+          "name": "global_name",
+          "type": "str",
+          "default": "exported_data",
+          "label": "全局变量名",
+          "description": "引出的全局变量名称",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "import_variable",
+      "name": "引入变量",
+      "description": "从全局命名空间中引入变量 \"{variable_name}\"。如果该变量是 DataFrame，则创建其副本以避免修改原始数据；否则直接引用。引入后打印变量形状并显示前 5 行。",
+      "category": "输入输出",
+      "template": "# 引入变量\ndef import_variable(variable_name: str = \"\") -> pd.DataFrame:\n    \"\"\"\n    Import an existing variable from the global namespace.\n\n    Algorithm:\n        name: 引入变量\n        category: load_data\n        prompt: 从全局命名空间中引入变量 \"{variable_name}\"。如果该变量是 DataFrame，则创建其副本以避免修改原始数据；否则直接引用。引入后打印变量形状并显示前 5 行。\n        imports: import pandas as pd\n    \n    Parameters:\n    variable_name (str): 当前会话中的DataFrame变量名\n        label: 变量名称\n        widget: variable-selector\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: Imported variable.\n    \"\"\"\n    import globals\n    \n    try:\n        if variable_name not in globals():\n            print(f\"Error: Variable '{variable_name}' not found in global scope.\")\n            return None\n        \n        source_var = globals()[variable_name]\n        if hasattr(source_var, 'copy'):\n            result = source_var.copy()\n        else:\n            result = source_var\n            \n        print(f\"Imported '{variable_name}'\")\n        if hasattr(result, 'shape'):\n             print(f\"Shape: {result.shape}\")\n        if hasattr(result, 'head'):\n             print(f\"First few rows:\")\n             display(result.head())\n        return result\n    except Exception as e:\n        print(f\"Import failed: {e}\")\n        return None\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "variable_name",
+          "type": "str",
+          "default": "",
+          "label": "变量名称",
+          "description": "当前会话中的DataFrame变量名",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "variable-selector"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "load_csv",
+      "name": "加载 CSV",
+      "description": "使用 pandas 读取位于 \"{filepath}\" 的 CSV 文件。如果指定了时间索引列 \"{timeIndex}\"，则将其转换为时间类型并设为索引。读取完成后，显示数据的前 5 行以供预览。",
+      "category": "输入输出",
+      "template": "# 加载 CSV\ndef load_csv(filepath: str = \"dataset/data.csv\", timeIndex: str = \"\") -> Optional[pd.DataFrame]:\n    \"\"\"\n    Load CSV data from the specified filepath.\n\n    Algorithm:\n        name: 加载 CSV\n        category: load_data\n        prompt: 使用 pandas 读取位于 \"{filepath}\" 的 CSV 文件。如果指定了时间索引列 \"{timeIndex}\"，则将其转换为时间类型并设为索引。读取完成后，显示数据的前 5 行以供预览。\n        imports: import pandas as pd, import os\n    \n    Parameters:\n    filepath (str): CSV文件路径 (相对于项目根目录)\n        label: 文件路径\n        widget: file-selector\n        priority: critical\n    timeIndex (str): 选择作为时间索引的列名，为空则生成普通DataFrame\n        label: 时间索引列\n        widget: select\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: Loaded DataFrame.\n    \"\"\"\n    if not os.path.exists(filepath):\n        print(f\"Error: File not found at {filepath}\")\n        return None\n    else:\n        result = pd.read_csv(filepath)\n        \n        # Set time index if specified\n        if timeIndex:\n            try:\n                result[timeIndex] = pd.to_datetime(result[timeIndex])\n                result = result.set_index(timeIndex)\n                print(f\"Set '{timeIndex}' as time index\")\n            except Exception as e:\n                print(f\"Failed to set time index: {e}\")\n        \n        print(f\"Loaded data with shape: {result.shape}\")\n        return result\n",
+      "imports": [
+        "import pandas as pd",
+        "import os"
+      ],
+      "args": [
+        {
+          "name": "filepath",
+          "type": "str",
+          "default": "dataset/data.csv",
+          "label": "文件路径",
+          "description": "CSV文件路径 (相对于项目根目录)",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "file-selector"
+        },
+        {
+          "name": "timeIndex",
+          "type": "str",
+          "default": "",
+          "label": "时间索引列",
+          "description": "选择作为时间索引的列名，为空则生成普通DataFrame",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "select"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "csv_loader"
+    }
+  ],
+  "数据操作": [
+    {
+      "id": "concat_dfs",
+      "name": "数据连接 (Concat)",
+      "description": "请连接两个 DataFrame {df1} 和 {df2}。沿轴 {axis} 进行连接。",
+      "category": "数据操作",
+      "template": "# 数据连接 (Concat)\ndef concat_dfs(df1, df2, axis=0) -> pd.DataFrame:\n    \"\"\"\n    Concatenate two DataFrames.\n\n    Algorithm:\n        name: 数据连接 (Concat)\n        category: data_operation\n        prompt: 请连接两个 DataFrame {df1} 和 {df2}。沿轴 {axis} 进行连接。\n        imports: import pandas as pd\n    \n    Parameters:\n    df1 (pandas.DataFrame): First DataFrame.\n        role: input\n    df2 (pandas.DataFrame): Second DataFrame.\n        role: input\n    axis (int): Concatenation axis (0=rows, 1=columns).\n        label: 轴向\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: Concatenated DataFrame.\n    \"\"\"\n    try:\n        result = pd.concat([df1, df2], axis=axis)\n        print(f\"Concatenated DataFrames along axis {axis}.\")\n        print(f\"New shape: {result.shape}\")\n        return result\n    except Exception as e:\n        print(f\"Concat failed: {e}\")\n        return df1\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "axis",
+          "type": "int",
+          "default": 0,
+          "label": "轴向",
+          "description": "Concatenation axis (0=rows, 1=columns).",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "input-number"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df1",
+          "type": "str"
+        },
+        {
+          "name": "df2",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "fill_na",
+      "name": "填充缺失值",
+      "description": "请对 {VAR_NAME} 填充缺失值。使用值 {value} 或方法 {method} 进行填充。",
+      "category": "数据操作",
+      "template": "# 填充缺失值\ndef fill_na(df, value=None, method=None) -> pd.DataFrame:\n    \"\"\"\n    Fill missing values in a DataFrame.\n\n    Algorithm:\n        name: 填充缺失值\n        category: data_operation\n        prompt: 请对 {VAR_NAME} 填充缺失值。使用值 {value} 或方法 {method} 进行填充。\n        imports: import pandas as pd, import numpy as np\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    value (any): Value to use for filling missing values.\n        label: 填充值\n        priority: non-critical\n    method (str): Method to use for filling missing values (ffill, bfill).\n        label: 填充方法\n        options: [\"ffill\", \"bfill\"]\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with filled missing values.\n    \"\"\"\n    result = df.copy()\n    \n    try:\n        if value is not None:\n            result = result.fillna(value=value)\n            print(f\"Filled NA with value: {value}\")\n        elif method:\n            result = result.fillna(method=method)\n            print(f\"Filled NA with method: {method}\")\n        else:\n            print(\"Warning: No value or method specified for fillna.\")\n        \n        return result\n    except Exception as e:\n        print(f\"Fill NA failed: {e}\")\n        return result\n",
+      "imports": [
+        "import pandas as pd",
+        "import numpy as np"
+      ],
+      "args": [
+        {
+          "name": "value",
+          "type": "str",
+          "default": null,
+          "label": "填充值",
+          "description": "Value to use for filling missing values.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "method",
+          "type": "str",
+          "default": null,
+          "label": "填充方法",
+          "description": "Method to use for filling missing values (ffill, bfill).",
+          "priority": "non-critical",
+          "role": "parameter",
+          "options": [
+            "ffill",
+            "bfill"
+          ],
+          "widget": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "filter_rows",
+      "name": "筛选行",
+      "description": "请对 {VAR_NAME} 进行行筛选。根据条件 {condition} 筛选数据（例如 'age > 18'）。",
+      "category": "数据操作",
+      "template": "# 筛选行\ndef filter_rows(df, condition) -> pd.DataFrame:\n    \"\"\"\n    Filter rows based on a condition string.\n\n    Algorithm:\n        name: 筛选行\n        category: data_operation\n        prompt: 请对 {VAR_NAME} 进行行筛选。根据条件 {condition} 筛选数据（例如 'age > 18'）。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    condition (str): Condition string (e.g., \"col_a > 5 and col_b < 10\").\n        label: 筛选条件\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: Filtered DataFrame.\n    \"\"\"\n    result = df.copy()\n    \n    try:\n        result = result.query(condition)\n        print(f\"Filtered rows using query: '{condition}'\")\n        print(f\"Rows remaining: {result.shape[0]}\")\n        return result\n    except Exception as e:\n        print(f\"Filtering failed: {e}\")\n        return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "condition",
+          "type": "str",
+          "default": null,
+          "label": "筛选条件",
+          "description": "Condition string (e.g., \"col_a > 5 and col_b < 10\").",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "merge_dfs",
+      "name": "数据合并 (Merge)",
+      "description": "请合并两个数据框 {left} 和 {right}。根据指定的合并方式（inner, outer, left, right）和连接键进行 pd.merge 操作。",
+      "category": "数据操作",
+      "template": "# 数据合并 (Merge)\ndef merge_dfs(left, right, how=\"inner\", on=None) -> pd.DataFrame:\n    \"\"\"\n    Merge two DataFrames.\n\n    Algorithm:\n        name: 数据合并 (Merge)\n        category: data_operation\n        prompt: 请合并两个数据框 {left} 和 {right}。根据指定的合并方式（inner, outer, left, right）和连接键进行 pd.merge 操作。\n        imports: import pandas as pd\n    \n    Parameters:\n    left (pandas.DataFrame): Left DataFrame.\n        role: input\n    right (pandas.DataFrame): Right DataFrame.\n        role: input\n    how (str): Merge method (inner, outer, left, right).\n        label: 合并方式\n        options: [\"inner\", \"outer\", \"left\", \"right\"]\n        priority: critical\n    on (str): Column to merge on.\n        label: 合并列\n        widget: column-selector\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: Merged DataFrame.\n    \"\"\"\n    try:\n        if on:\n            result = pd.merge(left, right, how=how, on=on)\n        else:\n            # Merge on index if no column specified\n            result = pd.merge(left, right, how=how, left_index=True, right_index=True)\n        \n        print(f\"Merged DataFrames using {how} join.\")\n        print(f\"New shape: {result.shape}\")\n        return result\n    except Exception as e:\n        print(f\"Merge failed: {e}\")\n        return left\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "how",
+          "type": "str",
+          "default": "inner",
+          "label": "合并方式",
+          "description": "Merge method (inner, outer, left, right).",
+          "priority": "critical",
+          "role": "parameter",
+          "options": [
+            "inner",
+            "outer",
+            "left",
+            "right"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "on",
+          "type": "str",
+          "default": null,
+          "label": "合并列",
+          "description": "Column to merge on.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "left",
+          "type": "str"
+        },
+        {
+          "name": "right",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "rename_columns",
+      "name": "重命名列",
+      "description": "请对 {VAR_NAME} 的列进行重命名。使用映射关系 {columns_map}。",
+      "category": "数据操作",
+      "template": "# 重命名列\ndef rename_columns(df, columns_map) -> pd.DataFrame:\n    \"\"\"\n    Rename columns in a DataFrame.\n\n    Algorithm:\n        name: 重命名列\n        category: data_operation\n        prompt: 请对 {VAR_NAME} 的列进行重命名。使用映射关系 {columns_map}。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    columns_map (dict): Dictionary mapping old column names to new names.\n        label: 列名映射\n        type: dict\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with renamed columns.\n    \"\"\"\n    result = df.copy()\n    \n    try:\n        result = result.rename(columns=columns_map)\n        print(f\"Renamed columns using map: {columns_map}\")\n        return result\n    except Exception as e:\n        print(f\"Renaming failed: {e}\")\n        return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "columns_map",
+          "type": "str",
+          "default": null,
+          "label": "列名映射",
+          "description": "Dictionary mapping old column names to new names. type: dict",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "rolling_window",
+      "name": "窗口计算",
+      "description": "请对 {VAR_NAME} 进行窗口计算。使用窗口大小 {window} 对列 {columns} 应用 {func} 函数。",
+      "category": "数据操作",
+      "template": "# 窗口计算\ndef rolling_window(df, columns, window=5, func=\"mean\", min_periods=1, center=False) -> pd.DataFrame:\n    \"\"\"\n    Apply rolling window calculation to a DataFrame.\n\n    Algorithm:\n        name: 窗口计算\n        category: data_operation\n        prompt: 请对 {VAR_NAME} 进行窗口计算。使用窗口大小 {window} 对列 {columns} 应用 {func} 函数。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    columns (list): Columns to perform window calculation on.\n        label: 计算列\n        widget: column-selector\n        priority: critical\n    window (int): Window size.\n        label: 窗口大小\n        priority: critical\n    func (str): Aggregation function to apply.\n        label: 统计函数\n        options: [\"sum\", \"mean\", \"min\", \"max\", \"std\", \"var\"]\n        priority: critical\n    min_periods (int): Minimum number of observations required in window.\n        label: 最小观测值\n        priority: non-critical\n    center (bool): Whether to center the window.\n        label: 居中窗口\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with window calculation results.\n    \"\"\"\n    result = df.copy()\n    \n    # Select columns if specified, otherwise use all numeric columns\n    if not columns:\n        columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Apply rolling window function\n    try:\n        for col in columns:\n            result[col] = result[col].rolling(\n                window=window,\n                min_periods=min_periods,\n                center=center\n            ).agg(func)\n        \n        print(f\"Applied {func} with window size {window} to columns: {columns}\")\n        return result\n    except Exception as e:\n        print(f\"Window calculation failed: {e}\")\n        return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "columns",
+          "type": "list",
+          "default": null,
+          "label": "计算列",
+          "description": "Columns to perform window calculation on.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "window",
+          "type": "int",
+          "default": 5,
+          "label": "窗口大小",
+          "description": "Window size.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "input-number"
+        },
+        {
+          "name": "func",
+          "type": "str",
+          "default": "mean",
+          "label": "统计函数",
+          "description": "Aggregation function to apply.",
+          "priority": "critical",
+          "role": "parameter",
+          "options": [
+            "sum",
+            "mean",
+            "min",
+            "max",
+            "std",
+            "var"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "min_periods",
+          "type": "int",
+          "default": 1,
+          "label": "最小观测值",
+          "description": "Minimum number of observations required in window.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-number"
+        },
+        {
+          "name": "center",
+          "type": "bool",
+          "default": false,
+          "label": "居中窗口",
+          "description": "Whether to center the window.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "select_columns",
+      "name": "选择列",
+      "description": "请从 {VAR_NAME} 中选择指定的列 {columns}，生成新的 DataFrame。",
+      "category": "数据操作",
+      "template": "# 选择列\ndef select_columns(df, columns) -> pd.DataFrame:\n    \"\"\"\n    Select specified columns from a DataFrame.\n\n    Algorithm:\n        name: 选择列\n        category: data_operation\n        prompt: 请从 {VAR_NAME} 中选择指定的列 {columns}，生成新的 DataFrame。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    columns (list): List of columns to select.\n        label: 选择列\n        widget: column-selector\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with selected columns.\n    \"\"\"\n    result = df.copy()\n    \n    # Check if columns exist\n    missing_cols = [c for c in columns if c not in result.columns]\n    if missing_cols:\n        print(f\"Error: Columns not found: {missing_cols}\")\n        return result\n    else:\n        result = result[columns]\n        print(f\"Selected {len(columns)} columns. Shape: {result.shape}\")\n        return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "columns",
+          "type": "list",
+          "default": null,
+          "label": "选择列",
+          "description": "List of columns to select.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    }
+  ],
+  "数据预处理": [
+    {
+      "id": "alignment",
+      "name": "多源数据对齐",
+      "description": "请以 {VAR_NAME} 为基准执行多源时间对齐。使用 pandas 的 merge_asof 方法，将其他数据对齐到该时间轴。",
+      "category": "数据预处理",
+      "template": "# 多源数据对齐\ndef alignment(baseline_df: pd.DataFrame, other_df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"\n    Align other_df to baseline_df using merge_asof.\n\n    Algorithm:\n        name: 多源数据对齐\n        category: data_preprocessing\n        prompt: 请以 {VAR_NAME} 为基准执行多源时间对齐。使用 pandas 的 merge_asof 方法，将其他数据对齐到该时间轴。\n        imports: import pandas as pd\n    \n    Parameters:\n    baseline_df (pandas.DataFrame): Baseline DataFrame with DatetimeIndex.\n        role: input\n    other_df (pandas.DataFrame): Other DataFrame with DatetimeIndex to align.\n        role: input\n    \n    Returns:\n    pandas.DataFrame: Aligned DataFrame.\n    \"\"\"\n    result = baseline_df.copy()\n    \n    # Using merge_asof (requires sorted DatetimeIndex)\n    try:\n        result = pd.merge_asof(baseline_df.sort_index(), other_df.sort_index(), \n                              left_index=True, right_index=True, direction='nearest')\n        print(f\"Aligned DataFrame shape: {result.shape}\")\n    except Exception as e:\n        print(f\"Alignment failed: {e}\")\n        print(\"Returning baseline DataFrame.\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [],
+      "inputs": [
+        {
+          "name": "baseline_df",
+          "type": "DataFrame"
+        },
+        {
+          "name": "other_df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "data_fill",
+      "name": "数据填充",
+      "description": "请对 {VAR_NAME} 进行缺失值填充。支持多种填充方法，包括均值、中位数、众数、前向填充、后向填充、常数填充等。",
+      "category": "数据预处理",
+      "template": "# 数据填充\ndef data_fill(df: pd.DataFrame, method: str = \"均值\", value: float = 0.0, axis: int = 0, limit: int = 0) -> pd.DataFrame:\n    \"\"\"\n    Fill missing values in a DataFrame.\n\n    Algorithm:\n        name: 数据填充\n        category: data_preprocessing\n        prompt: 请对 {VAR_NAME} 进行缺失值填充。支持多种填充方法，包括均值、中位数、众数、前向填充、后向填充、常数填充等。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    method (str): 选择缺失值填充方法\n        label: 填充方法\n        options: [\"均值\", \"中位数\", \"众数\", \"前向填充\", \"后向填充\", \"常数\", \"线性插值\", \"最近邻插值\"]\n        priority: critical\n    value (float): 当使用常数填充时，指定填充的值\n        label: 填充值\n        priority: non-critical\n    axis (int): 沿哪个轴进行填充，0=按列填充，1=按行填充\n        label: 填充轴\n        options: [0, 1]\n        priority: non-critical\n    limit (int): 限制连续缺失值的填充数量，0表示无限制\n        label: 填充限制\n        min: 0\n        max: 1000\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with filled missing values.\n    \"\"\"\n    result = df.copy()\n    \n    # Map Chinese method name to pandas method\n    method_map = {\n        \"均值\": \"mean\",\n        \"中位数\": \"median\",\n        \"众数\": \"mode\",\n        \"前向填充\": \"ffill\",\n        \"后向填充\": \"bfill\",\n        \"常数\": \"constant\",\n        \"线性插值\": \"linear\",\n        \"最近邻插值\": \"nearest\"\n    }\n    \n    pandas_method = method_map.get(method, \"mean\")\n    \n    # Perform filling\n    limit_arg = limit if limit > 0 else None\n\n    try:\n        if pandas_method == \"constant\":\n            result = result.fillna(value=value, limit=limit_arg, axis=axis)\n        elif pandas_method in [\"ffill\", \"bfill\"]:\n            result = result.fillna(method=pandas_method, limit=limit_arg, axis=axis)\n        elif pandas_method in [\"mean\", \"median\"]:\n            # Fill numeric columns with mean/median\n            for col in result.columns:\n                if pd.api.types.is_numeric_dtype(result[col]):\n                    fill_val = result[col].agg(pandas_method)\n                    result[col] = result[col].fillna(fill_val, limit=limit_arg)\n        elif pandas_method == \"mode\":\n            # Fill with mode\n            for col in result.columns:\n                fill_val = result[col].mode().iloc[0] if not result[col].mode().empty else np.nan\n                result[col] = result[col].fillna(fill_val, limit=limit_arg)\n        else:  # Interpolation methods\n            result = result.interpolate(method=pandas_method, limit=limit_arg, axis=axis)\n        \n        print(f\"Filled missing values using '{method}' method\")\n        print(f\"New shape: {result.shape}\")\n    except Exception as e:\n        print(f\"Data filling failed: {e}\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "method",
+          "type": "str",
+          "default": "均值",
+          "label": "填充方法",
+          "description": "选择缺失值填充方法",
+          "priority": "critical",
+          "role": "parameter",
+          "options": [
+            "均值",
+            "中位数",
+            "众数",
+            "前向填充",
+            "后向填充",
+            "常数",
+            "线性插值",
+            "最近邻插值"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "value",
+          "type": "float",
+          "default": 0.0,
+          "label": "填充值",
+          "description": "当使用常数填充时，指定填充的值",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-number"
+        },
+        {
+          "name": "axis",
+          "type": "int",
+          "default": 0,
+          "label": "填充轴",
+          "description": "沿哪个轴进行填充，0=按列填充，1=按行填充",
+          "priority": "non-critical",
+          "role": "parameter",
+          "options": [
+            0,
+            1
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "limit",
+          "type": "int",
+          "default": 0,
+          "label": "填充限制",
+          "description": "限制连续缺失值的填充数量，0表示无限制",
+          "priority": "non-critical",
+          "role": "parameter",
+          "min": 0,
+          "max": 1000,
+          "widget": "input-number"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "diff_transform",
+      "name": "差分变换",
+      "description": "请对 {VAR_NAME} 进行差分变换，以消除趋势并使数据平稳。可配置差分阶数和滞后步数。",
+      "category": "数据预处理",
+      "template": "# 差分变换\ndef diff_transform(df: pd.DataFrame, order: int = 1, periods: int = 1, axis: int = 0, fill_method: str = \"\") -> pd.DataFrame:\n    \"\"\"\n    Perform difference transformation on a DataFrame.\n\n    Algorithm:\n        name: 差分变换\n        category: data_preprocessing\n        prompt: 请对 {VAR_NAME} 进行差分变换，以消除趋势并使数据平稳。可配置差分阶数和滞后步数。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    order (int): 差分的阶数，1为一阶差分，2为二阶差分等\n        label: 差分阶数\n        min: 1\n        max: 5\n        step: 1\n        priority: critical\n    periods (int): 差分的滞后步数，默认1\n        label: 滞后步数\n        min: 1\n        max: 10\n        step: 1\n        priority: critical\n    axis (int): 沿哪个轴进行差分，0=行（时间轴），1=列\n        label: 差分轴\n        options: [0, 1]\n        min: 0\n        max: 1\n        step: 1\n        priority: non-critical\n    fill_method (str): 差分后缺失值的填充方法，留空则不填充\n        label: 填充方法\n        options: [\"\", \"ffill\", \"bfill\"]\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: Differenced DataFrame.\n    \"\"\"\n    result = df.select_dtypes(include=['number']).copy()\n    \n    # Perform difference transformation\n    try:\n        # Apply difference multiple times for higher orders\n        for i in range(order):\n            result = result.diff(periods=periods, axis=axis)\n        \n        # Fill missing values if specified\n        if fill_method:\n            result = result.fillna(method=fill_method)\n            print(f\"Filled missing values using {fill_method}\")\n        \n        print(f\"Applied {order}nd order difference with periods={periods} along axis={axis}\")\n        print(f\"New shape: {result.shape}\")\n    except Exception as e:\n        print(f\"Difference transform failed: {e}\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "order",
+          "type": "int",
+          "default": 1,
+          "label": "差分阶数",
+          "description": "差分的阶数，1为一阶差分，2为二阶差分等",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "widget": "input-number"
+        },
+        {
+          "name": "periods",
+          "type": "int",
+          "default": 1,
+          "label": "滞后步数",
+          "description": "差分的滞后步数，默认1",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "widget": "input-number"
+        },
+        {
+          "name": "axis",
+          "type": "int",
+          "default": 0,
+          "label": "差分轴",
+          "description": "沿哪个轴进行差分，0=行（时间轴），1=列",
+          "priority": "non-critical",
+          "role": "parameter",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "options": [
+            0,
+            1
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "fill_method",
+          "type": "str",
+          "default": "",
+          "label": "填充方法",
+          "description": "差分后缺失值的填充方法，留空则不填充",
+          "priority": "non-critical",
+          "role": "parameter",
+          "options": [
+            "",
+            "ffill",
+            "bfill"
+          ],
+          "widget": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "feature_scaling",
+      "name": "数据标准化/归一化",
+      "description": "请对 {VAR_NAME} 进行特征缩放。支持多种缩放方法，直接修改原始列。",
+      "category": "数据预处理",
+      "template": "# 数据标准化/归一化\ndef feature_scaling(df: pd.DataFrame, method: str = \"standard\", with_mean: bool = True, with_std: bool = True, feature_range: str = \"(0, 1)\") -> pd.DataFrame:\n    \"\"\"\n    Perform feature scaling on a DataFrame.\n\n    Algorithm:\n        name: 数据标准化/归一化\n        category: data_preprocessing\n        prompt: 请对 {VAR_NAME} 进行特征缩放。支持多种缩放方法，直接修改原始列。\n        imports: import pandas as pd, from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, MaxAbsScaler\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    method (str): 选择缩放方法：standard（Z-score）、minmax（0-1归一化）、robust（鲁棒缩放）、maxabs（最大绝对值缩放）\n        label: 缩放方法\n        options: [\"standard\", \"minmax\", \"robust\", \"maxabs\"]\n        priority: critical\n    with_mean (bool): 对于standard和robust方法，是否减去均值\n        label: 包含均值\n        priority: non-critical\n    with_std (bool): 对于standard方法，是否除以标准差\n        label: 包含标准差\n        priority: non-critical\n    feature_range (str): 对于minmax方法，指定目标范围，格式为'(min, max)'\n        label: 特征范围\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: Scaled DataFrame.\n    \"\"\"\n    result = df.copy()\n    \n    # Parse feature_range string to tuple\n    try:\n        if isinstance(feature_range, str):\n            feature_range_tuple = ast.literal_eval(feature_range)\n        else:\n            feature_range_tuple = feature_range\n            \n        if not isinstance(feature_range_tuple, tuple) or len(feature_range_tuple) != 2:\n             feature_range_tuple = (0, 1)\n    except:\n        feature_range_tuple = (0, 1)\n\n    # Select numeric columns only\n    numeric_cols = result.select_dtypes(include=['number']).columns\n    if not numeric_cols.empty:\n        try:\n            if method == 'standard':\n                scaler = StandardScaler(with_mean=with_mean, with_std=with_std)\n            elif method == 'minmax':\n                scaler = MinMaxScaler(feature_range=feature_range_tuple)\n            elif method == 'robust':\n                scaler = RobustScaler(with_centering=with_mean, with_scaling=with_std)\n            elif method == 'maxabs':\n                scaler = MaxAbsScaler()\n            else:\n                scaler = StandardScaler()  # Fallback\n            \n            # Scale in-place on original columns\n            result[numeric_cols] = scaler.fit_transform(result[numeric_cols])\n            \n            print(f\"Applied {method} scaling to {len(numeric_cols)} columns\")\n            if method == 'standard':\n                print(f\"  with_mean: {with_mean}, with_std: {with_std}\")\n            elif method == 'minmax':\n                print(f\"  feature_range: {feature_range_tuple}\")\n            elif method == 'robust':\n                print(f\"  with_centering: {with_mean}, with_scaling: {with_std}\")\n        except Exception as e:\n            print(f\"Scaling failed: {e}\")\n    else:\n        print(\"No numeric columns found for scaling\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd",
+        "from sklearn.preprocessing import StandardScaler",
+        "MinMaxScaler",
+        "RobustScaler",
+        "MaxAbsScaler"
+      ],
+      "args": [
+        {
+          "name": "method",
+          "type": "str",
+          "default": "standard",
+          "label": "缩放方法",
+          "description": "选择缩放方法：standard（Z-score）、minmax（0-1归一化）、robust（鲁棒缩放）、maxabs（最大绝对值缩放）",
+          "priority": "critical",
+          "role": "parameter",
+          "options": [
+            "standard",
+            "minmax",
+            "robust",
+            "maxabs"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "with_mean",
+          "type": "bool",
+          "default": true,
+          "label": "包含均值",
+          "description": "对于standard和robust方法，是否减去均值",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        },
+        {
+          "name": "with_std",
+          "type": "bool",
+          "default": true,
+          "label": "包含标准差",
+          "description": "对于standard方法，是否除以标准差",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        },
+        {
+          "name": "feature_range",
+          "type": "str",
+          "default": "(0, 1)",
+          "label": "特征范围",
+          "description": "对于minmax方法，指定目标范围，格式为'(min, max)'",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "interpolation_spline",
+      "name": "样条插值",
+      "description": "请对{VAR_NAME} 进行样条插值 (Spline)。使用 pandas 的 interpolate(method='spline', order=3) 以获得更平滑的补全曲线。",
+      "category": "数据预处理",
+      "template": "# 样条插值\ndef interpolation_spline(df: pd.DataFrame, order: int = 3) -> pd.DataFrame:\n    \"\"\"\n    Perform spline interpolation on a DataFrame.\n\n    Algorithm:\n        name: 样条插值\n        category: data_preprocessing\n        prompt: 请对{VAR_NAME} 进行样条插值 (Spline)。使用 pandas 的 interpolate(method='spline', order=3) 以获得更平滑的补全曲线。\n        imports: import pandas as pd, import numpy as np\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    order (int): 样条插值的阶数\n        label: 样条阶数\n        min: 1\n        max: 5\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with spline interpolation applied.\n    \"\"\"\n    result = df.copy()\n    \n    # Requires numeric index (or datetime converted to numeric) for spline\n    try:\n        result = result.interpolate(method='spline', order=order)\n    except Exception as e:\n        print(f\"Spline interpolation failed (index might not be compatible): {e}\")\n        print(\"Falling back to linear interpolation\")\n        result = result.interpolate(method='linear')\n    \n    print(f\"Applied spline interpolation with order {order}\")\n    return result\n",
+      "imports": [
+        "import pandas as pd",
+        "import numpy as np"
+      ],
+      "args": [
+        {
+          "name": "order",
+          "type": "int",
+          "default": 3,
+          "label": "样条阶数",
+          "description": "样条插值的阶数",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 1,
+          "max": 5,
+          "widget": "input-number"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "resampling_down",
+      "name": "降采样",
+      "description": "请对{VAR_NAME} 进行降采样聚合。使用 pandas 的 resample() 将数据聚合到更低的时间分辨率（例如 '1min' 或 '1H'）；数值列使用 mean()，状态列使用 last() 或 max()。",
+      "category": "数据预处理",
+      "template": "# 降采样\ndef resampling_down(df: pd.DataFrame, rule: str = \"1小时\", agg_method: str = \"均值\") -> pd.DataFrame:\n    \"\"\"\n    Downsample a DataFrame to a lower frequency.\n\n    Algorithm:\n        name: 降采样\n        category: data_preprocessing\n        prompt: 请对{VAR_NAME} 进行降采样聚合。使用 pandas 的 resample() 将数据聚合到更低的时间分辨率（例如 '1min' 或 '1H'）；数值列使用 mean()，状态列使用 last() 或 max()。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame with DatetimeIndex.\n        role: input\n    rule (str): 目标重采样频率\n        label: 频率规则\n        options: [\"15秒\", \"30秒\", \"1分钟\", \"5分钟\", \"15分钟\", \"30分钟\", \"1小时\"]\n        priority: critical\n    agg_method (str): 降采样时使用的聚合函数\n        label: 聚合方法\n        options: [\"均值\", \"求和\", \"最小值\", \"最大值\", \"第一个值\", \"最后一个值\", \"中位数\", \"标准差\", \"方差\", \"计数\"]\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: Downsampled DataFrame.\n    \"\"\"\n    result = df.copy()\n    \n    if not isinstance(result.index, pd.DatetimeIndex):\n        print(\"Error: Input DataFrame index is not a DatetimeIndex. Cannot resample.\")\n        return result\n    \n    # Map Chinese rule to pandas offset alias\n    rule_map = {\n        \"15秒\": \"15S\",\n        \"30秒\": \"30S\",\n        \"1分钟\": \"1T\",\n        \"5分钟\": \"5T\",\n        \"15分钟\": \"15T\",\n        \"30分钟\": \"30T\",\n        \"1小时\": \"1H\"\n    }\n    pandas_rule = rule_map.get(rule, rule) # Fallback to using the string directly if not in map\n\n    # Map Chinese aggregation method to pandas function name\n    agg_method_map = {\n        \"均值\": \"mean\",\n        \"求和\": \"sum\",\n        \"最小值\": \"min\",\n        \"最大值\": \"max\",\n        \"第一个值\": \"first\",\n        \"最后一个值\": \"last\",\n        \"中位数\": \"median\",\n        \"标准差\": \"std\",\n        \"方差\": \"var\",\n        \"计数\": \"count\"\n    }\n    \n    agg_func = agg_method_map.get(agg_method, agg_method)\n    \n    # Define aggregation dictionary: use selected method for all columns\n    agg_dict = {col: agg_func for col in result.columns}\n            \n    result = result.resample(pandas_rule).agg(agg_dict)\n    print(f\"Resampled to {pandas_rule} frequency. New shape: {result.shape}\")\n    print(f\"Aggregation method: {agg_method} ({agg_func})\")\n    return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "rule",
+          "type": "str",
+          "default": "1小时",
+          "label": "频率规则",
+          "description": "目标重采样频率",
+          "priority": "critical",
+          "role": "parameter",
+          "options": [
+            "15秒",
+            "30秒",
+            "1分钟",
+            "5分钟",
+            "15分钟",
+            "30分钟",
+            "1小时"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "agg_method",
+          "type": "str",
+          "default": "均值",
+          "label": "聚合方法",
+          "description": "降采样时使用的聚合函数",
+          "priority": "critical",
+          "role": "parameter",
+          "options": [
+            "均值",
+            "求和",
+            "最小值",
+            "最大值",
+            "第一个值",
+            "最后一个值",
+            "中位数",
+            "标准差",
+            "方差",
+            "计数"
+          ],
+          "widget": "select"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    }
+  ],
+  "探索式分析": [
+    {
+      "id": "autocorrelation",
+      "name": "自相关分析 (ACF)",
+      "description": "请对{VAR_NAME} 进行自相关分析。计算并绘制 ACF 图，使用 statsmodels.graphics.tsaplots.plot_acf，以发现周期性模式。",
+      "category": "探索式分析",
+      "template": "# 自相关分析 (ACF)\ndef autocorrelation(df: pd.DataFrame, lags: int = 50, figsize: tuple = None) -> pd.DataFrame:\n    \"\"\"\n    Perform autocorrelation analysis on a DataFrame.\n\n    Algorithm:\n        name: 自相关分析 (ACF)\n        category: eda\n        prompt: 请对{VAR_NAME} 进行自相关分析。计算并绘制 ACF 图，使用 statsmodels.graphics.tsaplots.plot_acf，以发现周期性模式。\n        imports: import matplotlib.pyplot as plt, from statsmodels.graphics.tsaplots import plot_acf\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    lags (int): 绘制的滞后数量\n        label: 滞后数\n        min: 10\n        max: 200\n    figsize (tuple): 图像大小元组，例如 (15, 8)\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: Original DataFrame (unchanged).\n    \"\"\"\n    result = df.copy()\n    df_acf = df.select_dtypes(include=['number'])\n    \n    # Set default figsize\n    if figsize is None:\n        figsize = (15, 8)\n    \n    # Plot ACF for first few numeric columns\n    max_cols = 3\n    cols_to_plot = df_acf.columns[:max_cols]\n    \n    fig, axes = plt.subplots(len(cols_to_plot), 1, figsize=figsize, sharex=False)\n    if len(cols_to_plot) == 1: axes = [axes]\n    \n    for i, col in enumerate(cols_to_plot):\n        # Drop NA\n        data = df_acf[col].dropna()\n        plot_acf(data, ax=axes[i], title=f'Autocorrelation: {col}', lags=lags)\n    \n    plt.tight_layout()\n    plt.show()\n    \n    return result\n",
+      "imports": [
+        "import matplotlib.pyplot as plt",
+        "from statsmodels.graphics.tsaplots import plot_acf"
+      ],
+      "args": [
+        {
+          "name": "lags",
+          "type": "int",
+          "default": 50,
+          "label": "滞后数",
+          "description": "绘制的滞后数量",
+          "priority": "non-critical",
+          "role": "parameter",
+          "min": 10,
+          "max": 200,
+          "widget": "input-number"
+        },
+        {
+          "name": "figsize",
+          "type": "tuple",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "图像大小元组，例如 (15, 8)",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "data_features",
+      "name": "数据特征",
+      "description": "请对{VAR_NAME} 进行数据特征计算。使用pandas的describe()函数，计算各列的基本统计特征。",
+      "category": "探索式分析",
+      "template": "# 数据特征\ndef data_features(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"\n    Calculate data features for a DataFrame.\n\n    Algorithm:\n        name: 数据特征\n        category: eda\n        prompt: 请对{VAR_NAME} 进行数据特征计算。使用pandas的describe()函数，计算各列的基本统计特征。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    \n    Returns:\n    pandas.DataFrame: Original DataFrame (unchanged).\n    \"\"\"\n    result = df.copy()\n    \n    print(\"=== 数据基本统计特征 ===\")\n    print()\n    \n    # Calculate and display describe()\n    describe_result = result.describe()\n    display(describe_result)\n    \n    print()\n    print(\"=== 数据结构信息 ===\")\n    print(f\"数据形状: {result.shape}\")\n    print(f\"列名: {list(result.columns)}\")\n    print(f\"数据类型:\")\n    display(result.dtypes)\n    \n    print()\n    print(\"=== 缺失值统计 ===\")\n    missing_values = result.isnull().sum()\n    missing_percentage = (result.isnull().sum() / len(result)) * 100\n    missing_stats = pd.DataFrame({\"缺失值数量\": missing_values, \"缺失值百分比(%)\": missing_percentage.round(2)})\n    display(missing_stats[missing_stats[\"缺失值数量\"] > 0])\n    \n    if missing_stats[missing_stats[\"缺失值数量\"] > 0].empty:\n        print(\"无缺失值\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "decomposition",
+      "name": "STL 分解",
+      "description": "请对{VAR_NAME} 执行 STL 分解 (Seasonal-Trend decomposition using LOESS)。将数据分解为趋势、季节与残差，并绘制分解结果图。",
+      "category": "探索式分析",
+      "template": "# STL 分解\ndef decomposition(df: pd.DataFrame, figsize: tuple = None) -> pd.DataFrame:\n    \"\"\"\n    Perform STL decomposition on a DataFrame.\n\n    Algorithm:\n        name: STL 分解\n        category: eda\n        prompt: 请对{VAR_NAME} 执行 STL 分解 (Seasonal-Trend decomposition using LOESS)。将数据分解为趋势、季节与残差，并绘制分解结果图。\n        imports: import matplotlib.pyplot as plt, from statsmodels.tsa.seasonal import STL, import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame with DatetimeIndex.\n        role: input\n    figsize (tuple): 图像大小元组，例如 (15, 8)\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: Original DataFrame (unchanged).\n    \"\"\"\n    result = df.copy()\n    df_stl = df.select_dtypes(include=['number']).copy()\n    \n    # Set default figsize\n    if figsize is None:\n        figsize = (15, 8)\n    \n    # Try to set frequency if missing\n    if isinstance(df_stl.index, pd.DatetimeIndex) and df_stl.index.freq is None:\n        inferred_freq = pd.infer_freq(df_stl.index)\n        if inferred_freq:\n            df_stl = df_stl.asfreq(inferred_freq)\n            df_stl = df_stl.interpolate() # Fill gaps created by asfreq\n    \n    target_col = df_stl.columns[0] # Decompose the first column\n    print(f\"Decomposing column: {target_col}\")\n    \n    try:\n        # Period is optional if freq is set, otherwise might need to specify\n        res = STL(df_stl[target_col], robust=True).fit()\n        \n        fig = res.plot()\n        fig.set_size_inches(figsize[0], figsize[1])\n        plt.show()\n    except Exception as e:\n        print(f\"STL Decomposition failed: {e}\")\n        print(\"Ensure data has a regular time frequency.\")\n    \n    return result\n",
+      "imports": [
+        "import matplotlib.pyplot as plt",
+        "from statsmodels.tsa.seasonal import STL",
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "figsize",
+          "type": "tuple",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "图像大小元组，例如 (15, 8)",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "sampling_period",
+      "name": "采样周期统计",
+      "description": "请对{VAR_NAME} 进行采样周期统计。计算每一列数据的实际采样周次。",
+      "category": "探索式分析",
+      "template": "# 采样周期统计\ndef sampling_period(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"\n    Analyze sampling periods in a DataFrame.\n\n    Algorithm:\n        name: 采样周期统计\n        category: eda\n        prompt: 请对{VAR_NAME} 进行采样周期统计。计算每一列数据的实际采样周次。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame with DatetimeIndex.\n        role: input\n    \n    Returns:\n    pandas.DataFrame: Original DataFrame (unchanged).\n    \"\"\"\n    result = df.copy()\n    \n    if isinstance(result.index, pd.DatetimeIndex):\n        # Initialize results list\n        results = []\n        \n        # Iterate through each column\n        for col in result.columns:\n            # Calculate time differences for non-null values in this column\n            col_data = result[col].dropna()\n            \n            if len(col_data) < 2:\n                continue\n                \n            # Get the indices of non-null values\n            non_null_indices = col_data.index\n            \n            # Calculate time differences between consecutive non-null points\n            col_time_diffs = non_null_indices.to_series().diff().dropna()\n            \n            if not col_time_diffs.empty:\n                # Calculate average sampling period in seconds\n                avg_seconds = col_time_diffs.mean().total_seconds()\n                if avg_seconds > 0:\n                    # Add to results list\n                    results.append({\n                        \"列名\": col,\n                        \"平均采样周期\": \"平均采样周期\",\n                        \"采样周期值\": f\"{avg_seconds:.0f}s\"\n                    })\n        \n        # Create DataFrame from results\n        if results:\n            sampling_df = pd.DataFrame(results)\n            display(sampling_df)\n        else:\n            print(\"没有足够的数据点来计算采样周期。\")\n    else:\n        print(\"错误: 数据索引不是时间索引，无法进行采样周期统计。\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    }
+  ],
+  "异常检测": [
+    {
+      "id": "change_point",
+      "name": "变点检测",
+      "description": "请对 {VAR_NAME} 执行变点检测。检测 {n_bkps} 个变点。",
+      "category": "异常检测",
+      "template": "# 变点检测\ndef change_point(df, n_bkps=5, figsize=None) -> pd.DataFrame:\n    \"\"\"\n    Detect change points in a time series using binary segmentation.\n\n    Algorithm:\n        name: 变点检测\n        category: anomaly_detection\n        prompt: 请对 {VAR_NAME} 执行变点检测。检测 {n_bkps} 个变点。\n        imports: import pandas as pd, import ruptures as rpt, import matplotlib.pyplot as plt\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame with time series data.\n        role: input\n    n_bkps (int): Number of change points to detect.\n        label: 变点数量\n        min: 1\n        priority: critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: Original DataFrame (unchanged).\n    \"\"\"\n    result = df.copy()\n    \n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    try:\n        import ruptures as rpt\n        \n        # Select first numeric column for change point detection\n        target_col = result.select_dtypes(include=['number']).columns[0]\n        signal = result[target_col].values\n        \n        # Detection\n        algo = rpt.Binseg(model=\"l2\").fit(signal)\n        change_points = algo.predict(n_bkps=n_bkps)\n        \n        # Display\n        rpt.display(signal, change_points, figsize=figsize)\n        plt.title(f'Change Point Detection: {target_col}')\n        plt.show()\n        \n        print(f\"Found {len(change_points)} change points in column {target_col}.\")\n    except ImportError:\n        print(\"ruptures library not installed. Change point detection skipped.\")\n    except Exception as e:\n        print(f\"Change point detection failed: {e}\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd",
+        "import ruptures as rpt",
+        "import matplotlib.pyplot as plt"
+      ],
+      "args": [
+        {
+          "name": "n_bkps",
+          "type": "int",
+          "default": 5,
+          "label": "变点数量",
+          "description": "Number of change points to detect.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 1,
+          "widget": "input-number"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "iqr_anomaly",
+      "name": "IQR 异常检测",
+      "description": "请对 {VAR_NAME} 执行 IQR 异常检测。使用 IQR 倍数 {multiplier}。",
+      "category": "异常检测",
+      "template": "# IQR 异常检测\ndef iqr_anomaly(df, columns, multiplier=1.5) -> pd.DataFrame:\n    \"\"\"\n    Detect anomalies using IQR (Interquartile Range) method.\n\n    Algorithm:\n        name: IQR 异常检测\n        category: anomaly_detection\n        prompt: 请对 {VAR_NAME} 执行 IQR 异常检测。使用 IQR 倍数 {multiplier}。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    columns (list): Columns to detect anomalies in.\n        label: 检测列\n        widget: column-selector\n        priority: critical\n    multiplier (float): IQR multiplier for threshold.\n        label: IQR倍数\n        min: 0.5\n        max: 5.0\n        step: 0.1\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with anomaly flags.\n    \"\"\"\n    result = df.copy()\n    \n    if not columns:\n        columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    for col in columns:\n        # 计算IQR\n        q1 = result[col].quantile(0.25)\n        q3 = result[col].quantile(0.75)\n        iqr = q3 - q1\n        \n        # 计算上下界\n        lower_bound = q1 - multiplier * iqr\n        upper_bound = q3 + multiplier * iqr\n        \n        # 标记异常值\n        result[f'{col}_lower_bound'] = lower_bound\n        result[f'{col}_upper_bound'] = upper_bound\n        result[f'{col}_anomaly'] = (result[col] < lower_bound) | (result[col] > upper_bound)\n        \n        # 统计异常值数量\n        anomalies_count = result[f'{col}_anomaly'].sum()\n        print(f\"列 '{col}' 发现 {anomalies_count} 个异常值。\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "columns",
+          "type": "list",
+          "default": null,
+          "label": "检测列",
+          "description": "Columns to detect anomalies in.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "multiplier",
+          "type": "float",
+          "default": 1.5,
+          "label": "IQR倍数",
+          "description": "IQR multiplier for threshold.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 0.5,
+          "max": 5.0,
+          "step": 0.1,
+          "widget": "input-number"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "isolation_forest",
+      "name": "孤立森林异常检测",
+      "description": "请对 {VAR_NAME} 执行孤立森林异常检测。设置异常比例为 {contamination}。",
+      "category": "异常检测",
+      "template": "# 孤立森林异常检测\ndef isolation_forest(df, contamination=0.05) -> pd.DataFrame:\n    \"\"\"\n    Detect anomalies using Isolation Forest algorithm.\n\n    Algorithm:\n        name: 孤立森林异常检测\n        category: anomaly_detection\n        prompt: 请对 {VAR_NAME} 执行孤立森林异常检测。设置异常比例为 {contamination}。\n        imports: import pandas as pd, from sklearn.ensemble import IsolationForest\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    contamination (float): Expected proportion of anomalies in the data.\n        label: 异常比例\n        min: 0.0\n        max: 0.5\n        step: 0.01\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with anomaly flags.\n    \"\"\"\n    result = df.copy()\n    \n    # Select numeric columns only\n    numeric_data = result.select_dtypes(include=['number'])\n    \n    if numeric_data.empty:\n        print(\"No numeric columns found for anomaly detection.\")\n        return result\n    \n    # Fit isolation forest model\n    model = IsolationForest(contamination=contamination, random_state=42)\n    result['anomaly'] = model.fit_predict(numeric_data)\n    \n    # -1 indicates anomaly, 1 indicates normal\n    anomalies = result[result['anomaly'] == -1]\n    print(f\"Found {len(anomalies)} anomalies using Isolation Forest with contamination={contamination}.\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd",
+        "from sklearn.ensemble import IsolationForest"
+      ],
+      "args": [
+        {
+          "name": "contamination",
+          "type": "float",
+          "default": 0.05,
+          "label": "异常比例",
+          "description": "Expected proportion of anomalies in the data.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 0.0,
+          "max": 0.5,
+          "step": 0.01,
+          "widget": "input-number"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "moving_window_iqr_anomaly",
+      "name": "移动窗口 IQR 检测",
+      "description": "请对 {VAR_NAME} 执行移动窗口 IQR 异常检测。窗口大小 {window}，倍数 {multiplier}。",
+      "category": "异常检测",
+      "template": "# 移动窗口 IQR 检测\ndef moving_window_iqr_anomaly(df, columns, window=60, multiplier=1.5, center=True) -> pd.DataFrame:\n    \"\"\"\n    Detect anomalies using moving window IQR method.\n\n    Algorithm:\n        name: 移动窗口 IQR 检测\n        category: anomaly_detection\n        prompt: 请对 {VAR_NAME} 执行移动窗口 IQR 异常检测。窗口大小 {window}，倍数 {multiplier}。\n        imports: import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    columns (list): Columns to detect anomalies in.\n        label: 检测列\n        widget: column-selector\n        priority: critical\n    window (int): Rolling window size.\n        label: 窗口大小\n        min: 5\n        priority: critical\n    multiplier (float): IQR multiplier for threshold.\n        label: IQR倍数\n        min: 0.5\n        max: 5.0\n        step: 0.1\n        priority: critical\n    center (bool): Whether to center the window.\n        label: 居中窗口\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with anomaly flags.\n    \"\"\"\n    result = df.copy()\n    \n    if not columns:\n        columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    for col in columns:\n        # 计算移动窗口的四分位数\n        rolling_q1 = result[col].rolling(window=window, center=center).quantile(0.25)\n        rolling_q3 = result[col].rolling(window=window, center=center).quantile(0.75)\n        \n        # 计算移动窗口IQR和上下界\n        rolling_iqr = rolling_q3 - rolling_q1\n        rolling_lower = rolling_q1 - multiplier * rolling_iqr\n        rolling_upper = rolling_q3 + multiplier * rolling_iqr\n        \n        # 标记异常值\n        result[f'{col}_rolling_lower'] = rolling_lower\n        result[f'{col}_rolling_upper'] = rolling_upper\n        result[f'{col}_anomaly'] = (result[col] < rolling_lower) | (result[col] > rolling_upper)\n        \n        # 统计异常值数量\n        anomalies_count = result[f'{col}_anomaly'].sum()\n        print(f\"列 '{col}' 发现 {anomalies_count} 个异常值。\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "columns",
+          "type": "list",
+          "default": null,
+          "label": "检测列",
+          "description": "Columns to detect anomalies in.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "window",
+          "type": "int",
+          "default": 60,
+          "label": "窗口大小",
+          "description": "Rolling window size.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 5,
+          "widget": "input-number"
+        },
+        {
+          "name": "multiplier",
+          "type": "float",
+          "default": 1.5,
+          "label": "IQR倍数",
+          "description": "IQR multiplier for threshold.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 0.5,
+          "max": 5.0,
+          "step": 0.1,
+          "widget": "input-number"
+        },
+        {
+          "name": "center",
+          "type": "bool",
+          "default": true,
+          "label": "居中窗口",
+          "description": "Whether to center the window.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "moving_window_zscore_anomaly",
+      "name": "移动窗口 Z-Score 检测",
+      "description": "请对 {VAR_NAME} 执行移动窗口 Z-Score 异常检测。窗口大小 {window}，阈值 {threshold}。",
+      "category": "异常检测",
+      "template": "# 移动窗口 Z-Score 检测\ndef moving_window_zscore_anomaly(df, columns, window=60, threshold=3.0, center=True) -> pd.DataFrame:\n    \"\"\"\n    Detect anomalies using moving window Z-score method.\n\n    Algorithm:\n        name: 移动窗口 Z-Score 检测\n        category: anomaly_detection\n        prompt: 请对 {VAR_NAME} 执行移动窗口 Z-Score 异常检测。窗口大小 {window}，阈值 {threshold}。\n        imports: import pandas as pd, import numpy as np\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    columns (list): Columns to detect anomalies in.\n        label: 检测列\n        widget: column-selector\n        priority: critical\n    window (int): Rolling window size.\n        label: 窗口大小\n        min: 5\n        priority: critical\n    threshold (float): Z-score threshold for anomalies.\n        label: Z-score阈值\n        min: 1.0\n        max: 10.0\n        step: 0.1\n        priority: critical\n    center (bool): Whether to center the window.\n        label: 居中窗口\n        priority: non-critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with anomaly flags.\n    \"\"\"\n    result = df.copy()\n    \n    if not columns:\n        columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    for col in columns:\n        # 计算移动窗口均值和标准差\n        rolling_mean = result[col].rolling(window=window, center=center).mean()\n        rolling_std = result[col].rolling(window=window, center=center).std()\n        \n        # 计算移动窗口Z-score\n        result[f'{col}_rolling_mean'] = rolling_mean\n        result[f'{col}_rolling_std'] = rolling_std\n        result[f'{col}_zscore'] = (result[col] - rolling_mean) / rolling_std\n        \n        # 标记异常值\n        result[f'{col}_anomaly'] = np.abs(result[f'{col}_zscore']) > threshold\n        \n        # 统计异常值数量\n        anomalies_count = result[f'{col}_anomaly'].sum()\n        print(f\"列 '{col}' 发现 {anomalies_count} 个异常值。\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd",
+        "import numpy as np"
+      ],
+      "args": [
+        {
+          "name": "columns",
+          "type": "list",
+          "default": null,
+          "label": "检测列",
+          "description": "Columns to detect anomalies in.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "window",
+          "type": "int",
+          "default": 60,
+          "label": "窗口大小",
+          "description": "Rolling window size.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 5,
+          "widget": "input-number"
+        },
+        {
+          "name": "threshold",
+          "type": "float",
+          "default": 3.0,
+          "label": "Z-score阈值",
+          "description": "Z-score threshold for anomalies.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 1.0,
+          "max": 10.0,
+          "step": 0.1,
+          "widget": "input-number"
+        },
+        {
+          "name": "center",
+          "type": "bool",
+          "default": true,
+          "label": "居中窗口",
+          "description": "Whether to center the window.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "threshold_sigma",
+      "name": "3-Sigma 异常检测",
+      "description": "请对 {VAR_NAME} 执行 3-Sigma 异常检测。使用窗口大小 {window} 和阈值 {sigma}。",
+      "category": "异常检测",
+      "template": "# 3-Sigma 异常检测\ndef threshold_sigma(df, columns, window=20, sigma=3.0) -> pd.DataFrame:\n    \"\"\"\n    Detect anomalies using 3-sigma threshold method.\n\n    Algorithm:\n        name: 3-Sigma 异常检测\n        category: anomaly_detection\n        prompt: 请对 {VAR_NAME} 执行 3-Sigma 异常检测。使用窗口大小 {window} 和阈值 {sigma}。\n        imports: import pandas as pd, import numpy as np\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    columns (list): Columns to detect anomalies in.\n        label: 检测列\n        widget: column-selector\n        priority: critical\n    window (int): Rolling window size.\n        label: 窗口大小\n        min: 5\n        priority: critical\n    sigma (float): Number of standard deviations for threshold.\n        label: Sigma阈值\n        min: 1.0\n        max: 10.0\n        step: 0.1\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with anomaly flags.\n    \"\"\"\n    result = df.copy()\n    \n    if not columns:\n        columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # 存储所有异常值数量\n    total_anomalies = 0\n    \n    # 为每个列执行3-Sigma异常检测\n    for col in columns:\n        data = result[col]\n        \n        # 计算移动窗口均值和标准差\n        rolling_mean = data.rolling(window=window).mean()\n        rolling_std = data.rolling(window=window).std()\n        \n        # 计算上下界\n        upper_bound = rolling_mean + sigma * rolling_std\n        lower_bound = rolling_mean - sigma * rolling_std\n        \n        # 标记异常值\n        result[f'{col}_rolling_mean'] = rolling_mean\n        result[f'{col}_rolling_std'] = rolling_std\n        result[f'{col}_upper_bound'] = upper_bound\n        result[f'{col}_lower_bound'] = lower_bound\n        result[f'{col}_is_anomaly'] = (data > upper_bound) | (data < lower_bound)\n        \n        # 统计异常值数量\n        anomalies_count = result[f'{col}_is_anomaly'].sum()\n        total_anomalies += anomalies_count\n        \n        print(f\"列 '{col}' 发现 {anomalies_count} 个异常值。\")\n    \n    print(f\"\\n总计发现 {total_anomalies} 个异常值。\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd",
+        "import numpy as np"
+      ],
+      "args": [
+        {
+          "name": "columns",
+          "type": "list",
+          "default": null,
+          "label": "检测列",
+          "description": "Columns to detect anomalies in.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "window",
+          "type": "int",
+          "default": 20,
+          "label": "窗口大小",
+          "description": "Rolling window size.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 5,
+          "widget": "input-number"
+        },
+        {
+          "name": "sigma",
+          "type": "float",
+          "default": 3.0,
+          "label": "Sigma阈值",
+          "description": "Number of standard deviations for threshold.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 1.0,
+          "max": 10.0,
+          "step": 0.1,
+          "widget": "input-number"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    },
+    {
+      "id": "zscore_anomaly",
+      "name": "Z-Score 异常检测",
+      "description": "请对 {VAR_NAME} 执行 Z-Score 异常检测。使用阈值 {threshold}。",
+      "category": "异常检测",
+      "template": "# Z-Score 异常检测\ndef zscore_anomaly(df, columns, threshold=3.0) -> pd.DataFrame:\n    \"\"\"\n    Detect anomalies using Z-score method.\n\n    Algorithm:\n        name: Z-Score 异常检测\n        category: anomaly_detection\n        prompt: 请对 {VAR_NAME} 执行 Z-Score 异常检测。使用阈值 {threshold}。\n        imports: import pandas as pd, import numpy as np\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    columns (list): Columns to detect anomalies in.\n        label: 检测列\n        widget: column-selector\n        priority: critical\n    threshold (float): Z-score threshold for anomalies.\n        label: Z-score阈值\n        min: 1.0\n        max: 10.0\n        step: 0.1\n        priority: critical\n    \n    Returns:\n    pandas.DataFrame: DataFrame with anomaly flags.\n    \"\"\"\n    result = df.copy()\n    \n    if not columns:\n        columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    for col in columns:\n        # 计算全局Z-score\n        mean = result[col].mean()\n        std = result[col].std()\n        result[f'{col}_zscore'] = (result[col] - mean) / std\n        \n        # 标记异常值\n        result[f'{col}_anomaly'] = np.abs(result[f'{col}_zscore']) > threshold\n        \n        # 统计异常值数量\n        anomalies_count = result[f'{col}_anomaly'].sum()\n        print(f\"列 '{col}' 发现 {anomalies_count} 个异常值。\")\n    \n    return result\n",
+      "imports": [
+        "import pandas as pd",
+        "import numpy as np"
+      ],
+      "args": [
+        {
+          "name": "columns",
+          "type": "list",
+          "default": null,
+          "label": "检测列",
+          "description": "Columns to detect anomalies in.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "threshold",
+          "type": "float",
+          "default": 3.0,
+          "label": "Z-score阈值",
+          "description": "Z-score threshold for anomalies.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 1.0,
+          "max": 10.0,
+          "step": 0.1,
+          "widget": "input-number"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "df_out",
+          "type": "DataFrame"
+        }
+      ],
+      "nodeType": "generic"
+    }
+  ],
+  "趋势绘制": [
+    {
+      "id": "trend_envelope",
+      "name": "数据包络线绘制",
+      "description": "请对{VAR_NAME} 绘制数据包络线。使用滚动窗口的最大值和最小值计算上、下包络线，并与原始曲线一起绘制。",
+      "category": "趋势绘制",
+      "template": "# 数据包络线绘制\ndef trend_envelope(df, y_columns=None, window_duration=\"1min\", title=\"数据包络线图\", figsize=None) -> None:\n    \"\"\"\n    Plot data envelope for a DataFrame.\n\n    Algorithm:\n        name: 数据包络线绘制\n        category: trend_plot\n        prompt: 请对{VAR_NAME} 绘制数据包络线。使用滚动窗口的最大值和最小值计算上、下包络线，并与原始曲线一起绘制。\n        imports: import pandas as pd, import matplotlib.pyplot as plt, import numpy as np\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n    y_columns (list): Columns to plot envelope for.\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    window_duration (str): Time window duration.\n        label: 窗口时长\n        options: [\"30s\", \"1min\", \"5min\", \"15min\", \"30min\", \"1h\", \"2h\", \"6h\", \"12h\", \"1D\"]\n        priority: critical\n    title (str): Chart title.\n        label: 图表标题\n        priority: non-critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    result = df.copy()\n    \n    if y_columns is None:\n        y_columns = []\n    \n    # Parse figsize\n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    # Determine Y columns\n    if not y_columns:\n        # Use all numeric columns if none specified\n        y_columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set Chinese font support\n    plt.rcParams['font.sans-serif'] = ['SimHei']  # Use SimHei for Chinese\n    plt.rcParams['axes.unicode_minus'] = False   # Fix minus sign display\n    \n    # Filter to selected columns\n    envelope_data = result[y_columns].copy()\n    \n    # Check if the index is a DatetimeIndex\n    is_time_series = isinstance(envelope_data.index, pd.DatetimeIndex)\n    \n    # Calculate window size based on time duration\n    window_size = 60  # Default window size if not time series\n    if is_time_series:\n        # Calculate time difference between consecutive points\n        time_diff = envelope_data.index.to_series().diff().median()\n        if pd.isna(time_diff):\n            time_diff = pd.Timedelta(seconds=1)  # Default to 1 second if no valid difference\n        \n        # Convert window duration to Timedelta\n        window_timedelta = pd.Timedelta(window_duration)\n        \n        # Calculate window size in points\n        window_size = int(window_timedelta / time_diff)\n        \n        # Ensure minimum window size\n        window_size = max(5, window_size)\n    \n    # Plot envelope for each column\n    for col in y_columns:\n        # Calculate upper and lower envelopes\n        upper_envelope = envelope_data[col].rolling(window=window_size, center=True).max()\n        lower_envelope = envelope_data[col].rolling(window=window_size, center=True).min()\n        \n        # Create plot\n        plt.figure(figsize=figsize)\n        plt.plot(envelope_data.index, envelope_data[col], label='原始数据', alpha=0.7)\n        plt.plot(envelope_data.index, upper_envelope, label=f'上包络线 (窗口={window_duration})', color='red', linestyle='--')\n        plt.plot(envelope_data.index, lower_envelope, label=f'下包络线 (窗口={window_duration})', color='green', linestyle='--')\n        \n        plt.title(f\"数据包络线: {col}\")\n        plt.xlabel('时间' if is_time_series else '索引')\n        plt.ylabel(col)\n        plt.grid(True, alpha=0.3)\n        plt.legend()\n        plt.tight_layout()\n        plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt",
+        "import numpy as np"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "Columns to plot envelope for.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "window_duration",
+          "type": "str",
+          "default": "1min",
+          "label": "窗口时长",
+          "description": "Time window duration.",
+          "priority": "critical",
+          "role": "parameter",
+          "options": [
+            "30s",
+            "1min",
+            "5min",
+            "15min",
+            "30min",
+            "1h",
+            "2h",
+            "6h",
+            "12h",
+            "1D"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "数据包络线图",
+          "label": "图表标题",
+          "description": "Chart title.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "trend_ewma",
+      "name": "指数加权趋势",
+      "description": "请对{VAR_NAME} 绘制 EWMA（指数加权移动平均）趋势线。使用 pandas 的 ewm(span=...).mean() 计算趋势，并使用 matplotlib 将原始数据与 EWMA 趋势曲线叠加展示。",
+      "category": "趋势绘制",
+      "template": "# 指数加权趋势\ndef trend_ewma(df, y_columns=None, span=60, title=\"指数加权趋势图\", figsize=None) -> None:\n    \"\"\"\n    Plot EWMA (Exponentially Weighted Moving Average) trend chart for a DataFrame.\n\n    Algorithm:\n        name: 指数加权趋势\n        category: trend_plot\n        prompt: 请对{VAR_NAME} 绘制 EWMA（指数加权移动平均）趋势线。使用 pandas 的 ewm(span=...).mean() 计算趋势，并使用 matplotlib 将原始数据与 EWMA 趋势曲线叠加展示。\n        imports: import pandas as pd, import matplotlib.pyplot as plt\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n    y_columns (list): Columns to plot EWMA for.\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    span (int): Smoothing span.\n        label: 平滑跨度\n        min: 5\n        max: 300\n        priority: critical\n    title (str): Chart title.\n        label: 图表标题\n        priority: non-critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    result = df.copy()\n    \n    if y_columns is None:\n        y_columns = []\n    \n    # Parse figsize\n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    # Determine Y columns\n    if not y_columns:\n        # Use all numeric columns if none specified\n        y_columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set Chinese font support\n    plt.rcParams['font.sans-serif'] = ['SimHei']  # Use SimHei for Chinese\n    plt.rcParams['axes.unicode_minus'] = False   # Fix minus sign display\n    \n    # Filter to selected columns\n    ewma_data = result[y_columns].copy()\n    \n    # Plot EWMA for each column\n    for col in y_columns:\n        # Calculate EWMA\n        ewma_data[f'{col}_EWMA'] = ewma_data[col].ewm(span=span).mean()\n        \n        # Create plot\n        plt.figure(figsize=figsize)\n        plt.plot(ewma_data.index, ewma_data[col], label='原始数据', alpha=0.4)\n        plt.plot(ewma_data.index, ewma_data[f'{col}_EWMA'], label=f'指数加权平均线 (span={span})', linewidth=2, color='orange')\n        \n        plt.title(f\"指数加权趋势: {col}\" if title == \"指数加权趋势图\" else title)\n        plt.xlabel('时间' if isinstance(ewma_data.index, pd.DatetimeIndex) else '索引')\n        plt.ylabel(col)\n        plt.grid(True, alpha=0.3)\n        plt.legend()\n        plt.tight_layout()\n        plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "Columns to plot EWMA for.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "span",
+          "type": "int",
+          "default": 60,
+          "label": "平滑跨度",
+          "description": "Smoothing span.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 5,
+          "max": 300,
+          "widget": "input-number"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "指数加权趋势图",
+          "label": "图表标题",
+          "description": "Chart title.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "trend_loess",
+      "name": "LOESS 趋势",
+      "description": "请对{VAR_NAME} 绘制 LOESS 平滑趋势。使用 statsmodels.nonparametric.smoothers_lowess.lowess 进行平滑并绘制趋势曲线；若缺少该库，可退化为 rolling().mean()。",
+      "category": "趋势绘制",
+      "template": "# LOESS 趋势\ndef trend_loess(df, y_columns=None, frac=0.1, title=\"LOESS趋势图\", figsize=None) -> None:\n    \"\"\"\n    Plot LOESS (Locally Weighted Scatterplot Smoothing) trend chart for a DataFrame.\n\n    Algorithm:\n        name: LOESS 趋势\n        category: trend_plot\n        prompt: 请对{VAR_NAME} 绘制 LOESS 平滑趋势。使用 statsmodels.nonparametric.smoothers_lowess.lowess 进行平滑并绘制趋势曲线；若缺少该库，可退化为 rolling().mean()。\n        imports: import statsmodels.api as sm, import matplotlib.pyplot as plt, import numpy as np, import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n    y_columns (list): Columns to plot LOESS for.\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    frac (float): Smoothing fraction.\n        label: 平滑因子\n        min: 0.05\n        max: 0.5\n        step: 0.05\n        priority: critical\n    title (str): Chart title.\n        label: 图表标题\n        priority: non-critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    result = df.copy()\n    \n    if y_columns is None:\n        y_columns = []\n    \n    # Parse figsize\n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    # Determine Y columns\n    if not y_columns:\n        # Use all numeric columns if none specified\n        y_columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set Chinese font support\n    plt.rcParams['font.sans-serif'] = ['SimHei']  # Use SimHei for Chinese\n    plt.rcParams['axes.unicode_minus'] = False   # Fix minus sign display\n    \n    # Filter to selected columns\n    loess_data = result[y_columns].dropna().copy()\n    \n    # Plot LOESS for each column\n    for col in y_columns:\n        try:\n            # Lowess requires numeric x-axis\n            x = np.arange(len(loess_data))\n            y = loess_data[col].values\n            \n            # Calculate LOESS\n            lowess = sm.nonparametric.lowess(y, x, frac=frac)\n            \n            # Create plot\n            plt.figure(figsize=figsize)\n            plt.plot(loess_data.index, y, label='原始数据', alpha=0.4)\n            plt.plot(loess_data.index, lowess[:, 1], label=f'LOESS 趋势 (平滑因子={frac})', linewidth=2, color='green')\n            \n            plt.title(f\"LOESS 趋势: {col}\" if title == \"LOESS趋势图\" else title)\n            plt.xlabel('时间' if isinstance(loess_data.index, pd.DatetimeIndex) else '索引')\n            plt.ylabel(col)\n            plt.grid(True, alpha=0.3)\n            plt.legend()\n            plt.tight_layout()\n            plt.show()\n        except Exception as e:\n            print(f\"LOESS计算失败，尝试使用移动平均线替代: {e}\")\n            # Fallback to moving average if LOESS fails\n            window_size = max(5, int(len(loess_data) * frac))\n            loess_data[f'{col}_MA'] = loess_data[col].rolling(window=window_size, center=True).mean()\n            \n            plt.figure(figsize=figsize)\n            plt.plot(loess_data.index, loess_data[col], label='原始数据', alpha=0.4)\n            plt.plot(loess_data.index, loess_data[f'{col}_MA'], label=f'移动平均线 (窗口={window_size})', linewidth=2, color='green')\n            \n            plt.title(f\"LOESS 趋势: {col}\" if title == \"LOESS趋势图\" else title)\n            plt.xlabel('时间' if isinstance(loess_data.index, pd.DatetimeIndex) else '索引')\n            plt.ylabel(col)\n            plt.grid(True, alpha=0.3)\n            plt.legend()\n            plt.tight_layout()\n            plt.show()\n",
+      "imports": [
+        "import statsmodels.api as sm",
+        "import matplotlib.pyplot as plt",
+        "import numpy as np",
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "Columns to plot LOESS for.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "frac",
+          "type": "float",
+          "default": 0.1,
+          "label": "平滑因子",
+          "description": "Smoothing fraction.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 0.05,
+          "max": 0.5,
+          "step": 0.05,
+          "widget": "input-number"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "LOESS趋势图",
+          "label": "图表标题",
+          "description": "Chart title.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "trend_ma",
+      "name": "移动平均趋势",
+      "description": "请对{VAR_NAME} 绘制移动平均趋势线。使用 pandas 的 rolling().mean() 计算趋势线，并用 matplotlib 绘制原始曲线与趋势线，添加网格、图例与中文标签。",
+      "category": "趋势绘制",
+      "template": "# 移动平均趋势\ndef trend_ma(df, y_columns=None, window_size=60, center=True, title=\"移动平均趋势图\", figsize=None) -> None:\n    \"\"\"\n    Plot moving average trend chart for a DataFrame.\n\n    Algorithm:\n        name: 移动平均趋势\n        category: trend_plot\n        prompt: 请对{VAR_NAME} 绘制移动平均趋势线。使用 pandas 的 rolling().mean() 计算趋势线，并用 matplotlib 绘制原始曲线与趋势线，添加网格、图例与中文标签。\n        imports: import pandas as pd, import matplotlib.pyplot as plt\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n    y_columns (list): Columns to plot moving average for.\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    window_size (int): Moving average window size.\n        label: 窗口大小\n        min: 5\n        max: 300\n        priority: critical\n    center (bool): Whether to center the moving average.\n        label: 居中对齐\n        priority: non-critical\n    title (str): Chart title.\n        label: 图表标题\n        priority: non-critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    result = df.copy()\n    \n    if y_columns is None:\n        y_columns = []\n    \n    # Parse figsize\n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    # Determine Y columns\n    if not y_columns:\n        # Use all numeric columns if none specified\n        y_columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set Chinese font support\n    plt.rcParams['font.sans-serif'] = ['SimHei']  # Use SimHei for Chinese\n    plt.rcParams['axes.unicode_minus'] = False   # Fix minus sign display\n    \n    # Filter to selected columns\n    ma_data = result[y_columns].copy()\n    \n    # Plot moving average for each column\n    for col in y_columns:\n        # Calculate moving average\n        ma_data[f'{col}_MA'] = ma_data[col].rolling(window=window_size, center=center).mean()\n        \n        # Create plot\n        plt.figure(figsize=figsize)\n        plt.plot(ma_data.index, ma_data[col], label='原始数据', alpha=0.4)\n        plt.plot(ma_data.index, ma_data[f'{col}_MA'], label=f'移动平均线 (窗口={window_size})', linewidth=2, color='red')\n        \n        plt.title(f\"移动平均趋势: {col}\" if title == \"移动平均趋势图\" else title)\n        plt.xlabel('时间' if isinstance(ma_data.index, pd.DatetimeIndex) else '索引')\n        plt.ylabel(col)\n        plt.grid(True, alpha=0.3)\n        plt.legend()\n        plt.tight_layout()\n        plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "Columns to plot moving average for.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "window_size",
+          "type": "int",
+          "default": 60,
+          "label": "窗口大小",
+          "description": "Moving average window size.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 5,
+          "max": 300,
+          "widget": "input-number"
+        },
+        {
+          "name": "center",
+          "type": "bool",
+          "default": true,
+          "label": "居中对齐",
+          "description": "Whether to center the moving average.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "移动平均趋势图",
+          "label": "图表标题",
+          "description": "Chart title.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "trend_ohlc",
+      "name": "OHLC重采样",
+      "description": "请对{VAR_NAME} 进行OHLC重采样。将时间序列数据重采样为指定频率的开盘价(Open)、最高价(High)、最低价(Low)和收盘价(Close)，并绘制蜡烛图。",
+      "category": "趋势绘制",
+      "template": "# OHLC重采样\ndef trend_ohlc(df, y_columns=None, resample_freq=\"5T\", title=\"OHLC蜡烛图\", figsize=None) -> None:\n    \"\"\"\n    Plot OHLC (Open-High-Low-Close) candlestick chart for a DataFrame.\n\n    Algorithm:\n        name: OHLC重采样\n        category: trend_plot\n        prompt: 请对{VAR_NAME} 进行OHLC重采样。将时间序列数据重采样为指定频率的开盘价(Open)、最高价(High)、最低价(Low)和收盘价(Close)，并绘制蜡烛图。\n        imports: import pandas as pd, import matplotlib.pyplot as plt, import mplfinance.original_flavor as mpf\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n    y_columns (list): Columns to resample.\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    resample_freq (str): Resampling frequency.\n        label: 重采样频率\n        priority: critical\n    title (str): Chart title.\n        label: 图表标题\n        priority: non-critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    result = df.copy()\n    \n    if y_columns is None:\n        y_columns = []\n    \n    # Parse figsize\n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    # Determine Y columns\n    if not y_columns:\n        # Use all numeric columns if none specified\n        y_columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Check if the index is a DatetimeIndex\n    if not isinstance(result.index, pd.DatetimeIndex):\n        print(\"错误: 数据索引不是时间索引，无法进行OHLC重采样。\")\n        return\n    else:\n        # Filter to selected columns\n        ohlc_data = result[y_columns].copy()\n        \n        # Perform OHLC resampling for each column\n        for col in y_columns:\n            # Resample to OHLC\n            ohlc = ohlc_data[col].resample(resample_freq).ohlc()\n            \n            # Plot OHLC chart using mplfinance\n            plt.figure(figsize=figsize)\n            mpf.candlestick2_ochl(plt.gca(), ohlc['open'], ohlc['high'], ohlc['low'], ohlc['close'], width=0.6, colorup='green', colordown='red', alpha=0.8)\n            \n            plt.title(f\"OHLC Chart for {col} (Resampled to {resample_freq})\")\n            plt.xlabel('时间')\n            plt.ylabel(col)\n            plt.grid(True, alpha=0.3)\n            plt.tight_layout()\n            plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt",
+        "import mplfinance.original_flavor as mpf"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "Columns to resample.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "resample_freq",
+          "type": "str",
+          "default": "5T",
+          "label": "重采样频率",
+          "description": "Resampling frequency.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "OHLC蜡烛图",
+          "label": "图表标题",
+          "description": "Chart title.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "trend_plot",
+      "name": "通用趋势图 (Trend)",
+      "description": "请根据配置绘制 {VAR_NAME} 的趋势图。支持自定义 X 轴、Y 轴列、标题、网格等设置。",
+      "category": "趋势绘制",
+      "template": "# 通用趋势图 (Trend)\ndef trend_plot(df, x_column=\"\", y_columns=None, plot_type=\"叠加显示\", title=\"趋势图\", xlabel=\"\", ylabel=\"\", grid=True, figsize=None) -> None:\n    \"\"\"\n    Plot trend chart for a DataFrame.\n\n    Algorithm:\n        name: 通用趋势图 (Trend)\n        category: trend_plot\n        prompt: 请根据配置绘制 {VAR_NAME} 的趋势图。支持自定义 X 轴、Y 轴列、标题、网格等设置。\n        imports: import matplotlib.pyplot as plt, import pandas as pd, import math\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    x_column (str): Column to use as X-axis.\n        label: X轴列名\n        widget: column-selector\n        priority: critical\n    y_columns (list): Columns to plot on Y-axis.\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    plot_type (str): Plot type (叠加显示, 堆叠显示, 分栏显示, 网格显示).\n        label: 绘图方式\n        options: [\"叠加显示\", \"堆叠显示\", \"分栏显示\", \"网格显示\"]\n        priority: critical\n    title (str): Chart title.\n        label: 图表标题\n        priority: non-critical\n    xlabel (str): X-axis label.\n        label: X轴标签\n        priority: non-critical\n    ylabel (str): Y-axis label.\n        label: Y轴标签\n        priority: non-critical\n    grid (bool): Whether to show grid.\n        label: 显示网格\n        priority: non-critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    result = df.copy()\n    \n    if y_columns is None:\n        y_columns = []\n    \n    print(f\"Plotting trend chart using {plot_type}\")\n    \n    # Parse figsize\n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    # Convert Chinese plot_type to English for code logic\n    plot_type_en = plot_type\n    if plot_type == '叠加显示':\n        plot_type_en = 'overlay'\n    elif plot_type == '堆叠显示':\n        plot_type_en = 'stacked'\n    elif plot_type == '分栏显示':\n        plot_type_en = 'subplots'\n    elif plot_type == '网格显示':\n        plot_type_en = 'grid'\n    \n    # Determine if the DataFrame is a time series\n    is_time_series = False\n    x_data = None\n    \n    # Check if index is a DatetimeIndex (most common case for time series)\n    if isinstance(result.index, pd.DatetimeIndex):\n        is_time_series = True\n        x_data = result.index\n    \n    # If x_column is specified, use it instead of index\n    if x_column and x_column in result.columns:\n        # Check if the specified column is datetime-like\n        if pd.api.types.is_datetime64_any_dtype(result[x_column]):\n            is_time_series = True\n            x_data = result[x_column]\n        else:\n            # Try to convert to datetime if it's not already\n            try:\n                x_data = pd.to_datetime(result[x_column])\n                is_time_series = True\n                print(f\"Converted column '{x_column}' to datetime\")\n            except Exception as e:\n                print(f\"Warning: Could not convert column '{x_column}' to datetime. Using original values.\")\n                x_data = result[x_column]\n    elif x_column:\n        # x_column specified but not found, use index\n        print(f\"Warning: X column '{x_column}' not found, using index.\")\n        if isinstance(result.index, pd.DatetimeIndex):\n            is_time_series = True\n        x_data = result.index\n    \n    # If x_data is still None (shouldn't happen), use index\n    if x_data is None:\n        x_data = result.index\n        if isinstance(x_data, pd.DatetimeIndex):\n            is_time_series = True\n    \n    if not y_columns:\n        # If empty (or parsed as empty), fallback to numeric columns only\n        y_columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Remove x_col from y_cols if present to avoid plotting time/index on Y-axis\n    if x_column and x_column in y_columns:\n        y_columns.remove(x_column)\n    \n    # Support Chinese characters in title and labels if needed\n    plt.rcParams['font.sans-serif'] = ['SimHei'] # Use SimHei for Chinese\n    plt.rcParams['axes.unicode_minus'] = False   # Fix minus sign\n    \n    # Create plot based on plot_type_en\n    if plot_type_en == 'overlay':\n        # Overlay plot (default) - all lines on same axes\n        plt.figure(figsize=figsize)\n        for col in y_columns:\n            if col in result.columns:\n                plt.plot(x_data, result[col], label=col)\n            else:\n                print(f\"Warning: Y column '{col}' not found.\")\n        plt.title(title)\n        plt.xlabel(xlabel if xlabel else ('时间' if is_time_series else '索引'))\n        plt.ylabel(ylabel if ylabel else '')\n        plt.grid(grid)\n        plt.legend()\n        plt.tight_layout()\n    \n    elif plot_type_en == 'stacked':\n        # Stacked plot\n        plt.figure(figsize=figsize)\n        # Calculate cumulative sum for stacking\n        df_stacked = result[y_columns].cumsum(axis=1)\n        for i, col in enumerate(y_columns):\n            if i == 0:\n                plt.fill_between(x_data, 0, df_stacked[col], label=col, alpha=0.7)\n            else:\n                plt.fill_between(x_data, df_stacked[y_columns[i-1]], df_stacked[col], label=col, alpha=0.7)\n        plt.title(title)\n        plt.xlabel(xlabel if xlabel else ('时间' if is_time_series else '索引'))\n        plt.ylabel(ylabel if ylabel else '')\n        plt.grid(grid)\n        plt.legend()\n        plt.tight_layout()\n    \n    elif plot_type_en == 'subplots':\n        # Subplots - each line in its own subplot, stacked vertically\n        n_cols = len(y_columns)\n        fig, axes = plt.subplots(n_cols, 1, figsize=(15, 3*n_cols), sharex=False)\n        if len(y_columns) == 1: axes = [axes]\n        \n        for i, col in enumerate(y_columns):\n            if col in result.columns:\n                axes[i].plot(x_data, result[col], label=col)\n                axes[i].set_title(col)\n                axes[i].grid(grid)\n                axes[i].legend()\n            else:\n                print(f\"Warning: Y column '{col}' not found.\")\n        \n        plt.suptitle(title, y=0.99, fontsize=16)\n        plt.xlabel(xlabel if xlabel else ('时间' if is_time_series else '索引'))\n        plt.tight_layout()\n    \n    elif plot_type_en == 'grid':\n        # Grid plot - each line in its own subplot, arranged in a grid\n        n_cols = len(y_columns)\n        if n_cols > 0:\n            # Calculate grid size\n            n_rows = int(np.ceil(np.sqrt(n_cols)))\n            n_cols_grid = int(np.ceil(n_cols / n_rows))\n            \n            fig, axes = plt.subplots(n_rows, n_cols_grid, figsize=(18, 4*n_rows))\n            axes = axes.flatten()\n            \n            for i in range(len(axes)):\n                if i < n_cols:\n                    col = y_columns[i]\n                    if col in result.columns:\n                        axes[i].plot(x_data, result[col], label=col)\n                        axes[i].set_title(col)\n                        axes[i].grid(grid)\n                        axes[i].legend()\n                    else:\n                        print(f\"Warning: Y column '{col}' not found.\")\n                else:\n                    # Hide unused subplots\n                    axes[i].axis('off')\n            \n            plt.suptitle(title, y=0.99, fontsize=16)\n            plt.tight_layout()\n    \n    plt.show()\n",
+      "imports": [
+        "import matplotlib.pyplot as plt",
+        "import pandas as pd",
+        "import math"
+      ],
+      "args": [
+        {
+          "name": "x_column",
+          "type": "str",
+          "default": "",
+          "label": "X轴列名",
+          "description": "Column to use as X-axis.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "Columns to plot on Y-axis.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "plot_type",
+          "type": "str",
+          "default": "叠加显示",
+          "label": "绘图方式",
+          "description": "Plot type (叠加显示, 堆叠显示, 分栏显示, 网格显示).",
+          "priority": "critical",
+          "role": "parameter",
+          "options": [
+            "叠加显示",
+            "堆叠显示",
+            "分栏显示",
+            "网格显示"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "趋势图",
+          "label": "图表标题",
+          "description": "Chart title.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "xlabel",
+          "type": "str",
+          "default": "",
+          "label": "X轴标签",
+          "description": "X-axis label.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "ylabel",
+          "type": "str",
+          "default": "",
+          "label": "Y轴标签",
+          "description": "Y-axis label.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "grid",
+          "type": "bool",
+          "default": true,
+          "label": "显示网格",
+          "description": "Whether to show grid.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "trend_polyfit",
+      "name": "多项式趋势拟合",
+      "description": "请对{VAR_NAME} 进行多项式趋势拟合并绘制趋势。使用 numpy.polyfit 对指定阶数进行拟合，绘制拟合曲线与原始数据，并计算与输出拟合优度（R²）。",
+      "category": "趋势绘制",
+      "template": "# 多项式趋势拟合\ndef trend_polyfit(df, y_columns=None, degree=2, title=\"多项式趋势拟合图\", figsize=None) -> None:\n    \"\"\"\n    Plot polynomial trend fit for a DataFrame.\n\n    Algorithm:\n        name: 多项式趋势拟合\n        category: trend_plot\n        prompt: 请对{VAR_NAME} 进行多项式趋势拟合并绘制趋势。使用 numpy.polyfit 对指定阶数进行拟合，绘制拟合曲线与原始数据，并计算与输出拟合优度（R²）。\n        imports: import numpy as np, import matplotlib.pyplot as plt, import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n    y_columns (list): Columns to perform polynomial fitting on.\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    degree (int): Polynomial degree.\n        label: 多项式阶数\n        min: 1\n        max: 5\n        priority: critical\n    title (str): Chart title.\n        label: 图表标题\n        priority: non-critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    result = df.copy()\n    \n    if y_columns is None:\n        y_columns = []\n    \n    # Parse figsize\n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    # Determine Y columns\n    if not y_columns:\n        # Use all numeric columns if none specified\n        y_columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set Chinese font support\n    plt.rcParams['font.sans-serif'] = ['SimHei']  # Use SimHei for Chinese\n    plt.rcParams['axes.unicode_minus'] = False   # Fix minus sign display\n    \n    # Filter to selected columns\n    poly_data = result[y_columns].dropna().copy()\n    \n    # Plot polynomial fit for each column\n    for col in y_columns:\n        # Prepare data\n        y = poly_data[col].values\n        x = np.arange(len(y))\n\n        # Fit polynomial\n        coefs = np.polyfit(x, y, deg=degree)\n        trend_poly = np.polyval(coefs, x)\n        \n        # Calculate R-squared\n        ss_res = np.sum((y - trend_poly) ** 2)\n        ss_tot = np.sum((y - np.mean(y)) ** 2)\n        r_squared = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0\n\n        # Create plot\n        plt.figure(figsize=figsize)\n        plt.plot(poly_data.index, y, label='原始数据', alpha=0.4)\n        plt.plot(poly_data.index, trend_poly, label=f'{degree}阶多项式拟合 (R²={r_squared:.4f})', linewidth=2, color='purple')\n        \n        plt.title(f\"多项式趋势拟合: {col}\" if title == \"多项式趋势拟合图\" else title)\n        plt.xlabel('时间' if isinstance(poly_data.index, pd.DatetimeIndex) else '索引')\n        plt.ylabel(col)\n        plt.grid(True, alpha=0.3)\n        plt.legend()\n        plt.tight_layout()\n        plt.show()\n        \n        # Print R-squared\n        print(f\"{col} 的 {degree}阶多项式拟合优度 R² = {r_squared:.4f}\")\n",
+      "imports": [
+        "import numpy as np",
+        "import matplotlib.pyplot as plt",
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "Columns to perform polynomial fitting on.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "degree",
+          "type": "int",
+          "default": 2,
+          "label": "多项式阶数",
+          "description": "Polynomial degree.",
+          "priority": "critical",
+          "role": "parameter",
+          "min": 1,
+          "max": 5,
+          "widget": "input-number"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "多项式趋势拟合图",
+          "label": "图表标题",
+          "description": "Chart title.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "trend_stl_trend",
+      "name": "STL 趋势分量",
+      "description": "请对{VAR_NAME} 执行 STL 分解并提取趋势分量。使用 statsmodels.tsa.seasonal.STL 提取趋势，绘制趋势曲线并与原始数据对比显示。",
+      "category": "趋势绘制",
+      "template": "# STL 趋势分量\ndef trend_stl_trend(df, y_columns=None, seasonal=7, robust=True, title=\"STL 趋势分量图\", figsize=None) -> None:\n    \"\"\"\n    Plot STL (Seasonal-Trend decomposition using LOESS) trend component for a DataFrame.\n\n    Algorithm:\n        name: STL 趋势分量\n        category: trend_plot\n        prompt: 请对{VAR_NAME} 执行 STL 分解并提取趋势分量。使用 statsmodels.tsa.seasonal.STL 提取趋势，绘制趋势曲线并与原始数据对比显示。\n        imports: from statsmodels.tsa.seasonal import STL, import matplotlib.pyplot as plt, import pandas as pd\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n    y_columns (list): Columns to decompose.\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    seasonal (int): Seasonal period.\n        label: 季节周期\n        min: 3\n        max: 100\n        priority: non-critical\n    robust (bool): Whether to use robust estimation.\n        label: 稳健估计\n        priority: non-critical\n    title (str): Chart title.\n        label: 图表标题\n        priority: non-critical\n    figsize (tuple): Figure size tuple.\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    result = df.copy()\n    \n    if y_columns is None:\n        y_columns = []\n    \n    # Parse figsize\n    if figsize is None:\n        figsize = (15, 8)\n    elif isinstance(figsize, str):\n        try:\n            figsize = eval(figsize)\n        except:\n            figsize = (15, 8)\n    \n    # Determine Y columns\n    if not y_columns:\n        # Use all numeric columns if none specified\n        y_columns = result.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set Chinese font support\n    plt.rcParams['font.sans-serif'] = ['SimHei']  # Use SimHei for Chinese\n    plt.rcParams['axes.unicode_minus'] = False   # Fix minus sign display\n    \n    # Filter to selected columns\n    stl_data = result[y_columns].copy()\n    \n    # Handle frequency for DatetimeIndex\n    if isinstance(stl_data.index, pd.DatetimeIndex):\n        if stl_data.index.freq is None:\n            inferred_freq = pd.infer_freq(stl_data.index)\n            if inferred_freq:\n                stl_data = stl_data.asfreq(inferred_freq).interpolate()\n    \n    # Plot STL trend for each column\n    for col in y_columns:\n        try:\n            res = STL(stl_data[col], seasonal=seasonal, robust=robust).fit()\n            \n            # Create plot\n            plt.figure(figsize=figsize)\n            plt.plot(stl_data.index, stl_data[col], label='原始数据', alpha=0.4)\n            plt.plot(stl_data.index, res.trend, label='STL 趋势分量', linewidth=2, color='brown')\n            \n            plt.title(f\"STL 趋势分量: {col}\" if title == \"STL 趋势分量图\" else title)\n            plt.xlabel('时间' if isinstance(stl_data.index, pd.DatetimeIndex) else '索引')\n            plt.ylabel(col)\n            plt.grid(True, alpha=0.3)\n            plt.legend()\n            plt.tight_layout()\n            plt.show()\n        except Exception as e:\n            print(f\"{col} 的 STL 分解失败: {e}\")\n",
+      "imports": [
+        "from statsmodels.tsa.seasonal import STL",
+        "import matplotlib.pyplot as plt",
+        "import pandas as pd"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "Columns to decompose.",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "seasonal",
+          "type": "int",
+          "default": 7,
+          "label": "季节周期",
+          "description": "Seasonal period.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "min": 3,
+          "max": 100,
+          "widget": "input-number"
+        },
+        {
+          "name": "robust",
+          "type": "bool",
+          "default": true,
+          "label": "稳健估计",
+          "description": "Whether to use robust estimation.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "STL 趋势分量图",
+          "label": "图表标题",
+          "description": "Chart title.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "str",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "Figure size tuple.",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "str"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    }
+  ],
+  "数据绘图": [
+    {
+      "id": "box_plot",
+      "name": "箱型图绘制",
+      "description": "请对 {VAR_NAME} 绘制箱型图，展示数据分布特征。支持单变量、多变量和分组箱型图。",
+      "category": "数据绘图",
+      "template": "# 箱型图绘制\ndef box_plot(df: pd.DataFrame, y_columns: List[str] = None, group_by: str = \"\", layout: str = \"子图\", \n             title: str = \"箱型图\", xlabel: str = \"\", ylabel: str = \"\", \n             show_outliers: bool = True, figsize: tuple = None) -> None:\n    \"\"\"\n    Create box plot for the given DataFrame.\n\n    Algorithm:\n        name: 箱型图绘制\n        category: 数据绘图\n        prompt: 请对 {VAR_NAME} 绘制箱型图，展示数据分布特征。支持单变量、多变量和分组箱型图。\n        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    y_columns (list): 要绘制箱型图的列 (留空则绘制所有数值列)\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    group_by (str): 用于分组的列名 (可选)\n        label: 分组列\n        widget: column-selector\n        priority: non-critical\n    layout (str): 选择图表的排布方式：子图（每行4个）或所有数据显示在一张图\n        label: 排布方式\n        options: [\"子图\", \"一张图\"]\n        priority: non-critical\n    title (str): 图表的标题\n        label: 图表标题\n        priority: non-critical\n    xlabel (str): X轴的显示标签\n        label: X轴标签\n        priority: non-critical\n    ylabel (str): Y轴的显示标签\n        label: Y轴标签\n        priority: non-critical\n    show_outliers (bool): 是否在箱型图中显示异常值\n        label: 显示异常值\n        priority: non-critical\n    figsize (tuple): 图像大小元组，例如 (15, 8)\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    # Determine Y columns\n    if not y_columns:\n        y_columns = df.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set default figsize\n    if figsize is None:\n        figsize = (15, 8)\n    \n    # Filter to selected columns\n    plot_data = df[y_columns].copy()\n    \n    # Add group column if specified\n    if group_by and group_by in df.columns:\n        plot_data[group_by] = df[group_by]\n    \n    # Create box plot\n    if len(y_columns) == 1:\n        # Single column\n        plt.figure(figsize=figsize)\n        if group_by:\n            sns.boxplot(x=group_by, y=y_columns[0], data=plot_data, showfliers=show_outliers)\n            plt.title(f\"Box Plot of {y_columns[0]} by {group_by}\")\n        else:\n            plt.boxplot(plot_data[y_columns[0]].dropna(), showfliers=show_outliers)\n            plt.title(f\"Box Plot of {y_columns[0]}\")\n            plt.xticks([1], y_columns)\n    else:\n        if layout == \"一张图\":\n            # Multiple columns on one plot\n            plt.figure(figsize=figsize)\n            if group_by:\n                for i, col in enumerate(y_columns):\n                    sns.boxplot(x=group_by, y=col, data=plot_data, showfliers=show_outliers, alpha=0.7, label=col)\n                plt.title(f\"Box Plots of Multiple Columns by {group_by}\")\n            else:\n                for col in y_columns:\n                    sns.boxplot(data=plot_data[col].dropna(), showfliers=show_outliers, alpha=0.5, label=col)\n                plt.title(\"Box Plot of Multiple Columns\")\n            plt.legend()\n        else:\n            # Grid subplots\n            n_cols = 4\n            n_rows = (len(y_columns) + n_cols - 1) // n_cols\n            fig, axes = plt.subplots(n_rows, n_cols, figsize=(figsize[0]*n_cols/2, figsize[1]*n_rows))\n            axes = axes.flatten()\n            \n            for i, col in enumerate(y_columns):\n                if group_by:\n                    sns.boxplot(x=group_by, y=col, data=plot_data, ax=axes[i], showfliers=show_outliers)\n                    axes[i].set_title(f\"Box Plot of {col} by {group_by}\")\n                else:\n                    axes[i].boxplot(plot_data[col].dropna(), showfliers=show_outliers)\n                    axes[i].set_title(f\"Box Plot of {col}\")\n                    axes[i].set_xticklabels([col])\n                axes[i].tick_params(axis='x', rotation=45)\n            \n            # Hide unused axes\n            for i in range(len(y_columns), len(axes)):\n                axes[i].axis('off')\n    \n    # Set labels\n    if xlabel:\n        plt.xlabel(xlabel)\n    if ylabel:\n        plt.ylabel(ylabel)\n    \n    plt.grid(True, alpha=0.3)\n    plt.tight_layout()\n    plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "要绘制箱型图的列 (留空则绘制所有数值列)",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "group_by",
+          "type": "str",
+          "default": "",
+          "label": "分组列",
+          "description": "用于分组的列名 (可选)",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "layout",
+          "type": "str",
+          "default": "子图",
+          "label": "排布方式",
+          "description": "选择图表的排布方式：子图（每行4个）或所有数据显示在一张图",
+          "priority": "non-critical",
+          "role": "parameter",
+          "options": [
+            "子图",
+            "一张图"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "箱型图",
+          "label": "图表标题",
+          "description": "图表的标题",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "xlabel",
+          "type": "str",
+          "default": "",
+          "label": "X轴标签",
+          "description": "X轴的显示标签",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "ylabel",
+          "type": "str",
+          "default": "",
+          "label": "Y轴标签",
+          "description": "Y轴的显示标签",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "show_outliers",
+          "type": "bool",
+          "default": true,
+          "label": "显示异常值",
+          "description": "是否在箱型图中显示异常值",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        },
+        {
+          "name": "figsize",
+          "type": "tuple",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "图像大小元组，例如 (15, 8)",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "correlation_heatmap",
+      "name": "相关性热力图",
+      "description": "请对 {VAR_NAME} 进行相关性分析。使用seaborn的heatmap函数，绘制各列之间的相关性热力图。",
+      "category": "数据绘图",
+      "template": "# 相关性热力图\ndef correlation_heatmap(df: pd.DataFrame, method: str = \"pearson\", title: str = \"相关性热力图\", \n                        figsize: tuple = None, annot: bool = True, cmap: str = \"coolwarm\") -> None:\n    \"\"\"\n    Create correlation heatmap for the given DataFrame.\n\n    Algorithm:\n        name: 相关性热力图\n        category: 数据绘图\n        prompt: 请对 {VAR_NAME} 进行相关性分析。使用seaborn的heatmap函数，绘制各列之间的相关性热力图。\n        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    method (str): 计算相关系数的方法\n        label: 相关系数方法\n        options: [\"pearson\", \"kendall\", \"spearman\"]\n        priority: non-critical\n    title (str): 图表的标题\n        label: 图表标题\n        priority: non-critical\n    figsize (tuple): 图像大小元组，例如 (15, 8)\n        label: 图像尺寸\n        priority: non-critical\n    annot (bool): 是否在热力图上显示相关系数数值\n        label: 显示数值\n        priority: non-critical\n    cmap (str): 热力图的颜色映射方案\n        label: 颜色映射\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    # Calculate correlation matrix\n    numeric_data = df.select_dtypes(include=['number'])\n    corr_matrix = numeric_data.corr(method=method)\n    \n    # Set default figsize\n    if figsize is None:\n        figsize = (15, 8)\n    \n    # Create heatmap\n    plt.figure(figsize=figsize)\n    sns.heatmap(corr_matrix, annot=annot, cmap=cmap, fmt='.2f', linewidths=0.5)\n    plt.title(title)\n    plt.tight_layout()\n    plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns"
+      ],
+      "args": [
+        {
+          "name": "method",
+          "type": "str",
+          "default": "pearson",
+          "label": "相关系数方法",
+          "description": "计算相关系数的方法",
+          "priority": "non-critical",
+          "role": "parameter",
+          "options": [
+            "pearson",
+            "kendall",
+            "spearman"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "相关性热力图",
+          "label": "图表标题",
+          "description": "图表的标题",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "tuple",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "图像大小元组，例如 (15, 8)",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "annot",
+          "type": "bool",
+          "default": true,
+          "label": "显示数值",
+          "description": "是否在热力图上显示相关系数数值",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        },
+        {
+          "name": "cmap",
+          "type": "str",
+          "default": "coolwarm",
+          "label": "颜色映射",
+          "description": "热力图的颜色映射方案",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "density_plot",
+      "name": "密度图显示",
+      "description": "请对 {VAR_NAME} 绘制密度图，展示数据分布特征。支持自定义颜色、带宽等设置。",
+      "category": "数据绘图",
+      "template": "# 密度图显示\ndef density_plot(df: pd.DataFrame, y_columns: List[str] = None, layout: str = \"子图\", \n                 title: str = \"密度图\", xlabel: str = \"\", ylabel: str = \"\", \n                 figsize: tuple = None) -> None:\n    \"\"\"\n    Create density plot for the given DataFrame.\n\n    Algorithm:\n        name: 密度图显示\n        category: 数据绘图\n        prompt: 请对 {VAR_NAME} 绘制密度图，展示数据分布特征。支持自定义颜色、带宽等设置。\n        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    y_columns (list): 要绘制密度图的列 (留空则绘制所有数值列)\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    layout (str): 选择图表的排布方式：子图（每行4个）或所有数据显示在一张图\n        label: 排布方式\n        options: [\"子图\", \"一张图\"]\n        priority: non-critical\n    title (str): 密度图的标题\n        label: 图表标题\n        priority: non-critical\n    xlabel (str): X轴的显示标签\n        label: X轴标签\n        priority: non-critical\n    ylabel (str): Y轴的显示标签\n        label: Y轴标签\n        priority: non-critical\n    figsize (tuple): 图像大小元组，例如 (15, 8)\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    # Determine Y columns\n    if not y_columns:\n        y_columns = df.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set default figsize\n    if figsize is None:\n        figsize = (15, 8)\n    \n    # Filter to selected columns\n    plot_data = df[y_columns].copy()\n    \n    # Create density plot\n    if len(y_columns) == 1:\n        # Single column\n        plt.figure(figsize=figsize)\n        sns.kdeplot(plot_data[y_columns[0]].dropna(), fill=True)\n        plt.title(f\"Density Plot of {y_columns[0]}\")\n        plt.xticks(rotation=45)\n    else:\n        if layout == \"一张图\":\n            # Multiple columns on one plot\n            plt.figure(figsize=figsize)\n            for col in y_columns:\n                sns.kdeplot(plot_data[col].dropna(), fill=True, alpha=0.5, label=col)\n            plt.title(\"Density Plot of Multiple Columns\")\n            plt.legend()\n        else:\n            # Grid subplots\n            n_cols = 4\n            n_rows = (len(y_columns) + n_cols - 1) // n_cols\n            fig, axes = plt.subplots(n_rows, n_cols, figsize=(figsize[0]*n_cols/2, figsize[1]*n_rows))\n            axes = axes.flatten()\n            \n            for i, col in enumerate(y_columns):\n                sns.kdeplot(plot_data[col].dropna(), fill=True, ax=axes[i])\n                axes[i].set_title(f\"Density Plot of {col}\")\n                axes[i].tick_params(axis='x', rotation=45)\n            \n            # Hide unused axes\n            for i in range(len(y_columns), len(axes)):\n                axes[i].axis('off')\n    \n    # Set labels\n    if xlabel:\n        plt.xlabel(xlabel)\n    if ylabel:\n        plt.ylabel(ylabel)\n    \n    plt.tight_layout()\n    plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "要绘制密度图的列 (留空则绘制所有数值列)",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "layout",
+          "type": "str",
+          "default": "子图",
+          "label": "排布方式",
+          "description": "选择图表的排布方式：子图（每行4个）或所有数据显示在一张图",
+          "priority": "non-critical",
+          "role": "parameter",
+          "options": [
+            "子图",
+            "一张图"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "密度图",
+          "label": "图表标题",
+          "description": "密度图的标题",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "xlabel",
+          "type": "str",
+          "default": "",
+          "label": "X轴标签",
+          "description": "X轴的显示标签",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "ylabel",
+          "type": "str",
+          "default": "",
+          "label": "Y轴标签",
+          "description": "Y轴的显示标签",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "tuple",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "图像大小元组，例如 (15, 8)",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "histogram",
+      "name": "直方图显示",
+      "description": "请对 {VAR_NAME} 绘制直方图，展示数据分布特征。支持自定义箱数、颜色、密度曲线等设置。",
+      "category": "数据绘图",
+      "template": "# 直方图显示\ndef histogram(df: pd.DataFrame, y_columns: List[str] = None, bins: int = 30, kde: bool = True, \n              layout: str = \"子图\", title: str = \"直方图\", xlabel: str = \"\", \n              ylabel: str = \"\", figsize: tuple = None) -> None:\n    \"\"\"\n    Create histogram for the given DataFrame.\n\n    Algorithm:\n        name: 直方图显示\n        category: 数据绘图\n        prompt: 请对 {VAR_NAME} 绘制直方图，展示数据分布特征。支持自定义箱数、颜色、密度曲线等设置。\n        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    y_columns (list): 要绘制直方图的列 (留空则绘制所有数值列)\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    bins (int): 直方图的箱数\n        label: 箱数\n        min: 5\n        max: 100\n        priority: non-critical\n    kde (bool): 是否在直方图上显示密度曲线\n        label: 显示密度曲线\n        priority: non-critical\n    layout (str): 选择图表的排布方式：子图（每行4个）或所有数据显示在一张图\n        label: 排布方式\n        options: [\"子图\", \"一张图\"]\n        priority: non-critical\n    title (str): 直方图的标题\n        label: 图表标题\n        priority: non-critical\n    xlabel (str): X轴的显示标签\n        label: X轴标签\n        priority: non-critical\n    ylabel (str): Y轴的显示标签\n        label: Y轴标签\n        priority: non-critical\n    figsize (tuple): 图像大小元组，例如 (15, 8)\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    # Determine Y columns\n    if not y_columns:\n        y_columns = df.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set default figsize\n    if figsize is None:\n        figsize = (15, 8)\n    \n    # Filter to selected columns\n    plot_data = df[y_columns].copy()\n    \n    # Create histogram\n    if len(y_columns) == 1:\n        # Single column\n        plt.figure(figsize=figsize)\n        sns.histplot(plot_data[y_columns[0]].dropna(), bins=bins, kde=kde)\n        plt.title(f\"Histogram of {y_columns[0]}\")\n        plt.xticks(rotation=45)\n    else:\n        if layout == \"一张图\":\n            # Multiple columns on one plot\n            plt.figure(figsize=figsize)\n            for col in y_columns:\n                sns.histplot(plot_data[col].dropna(), bins=bins, kde=kde, alpha=0.5, label=col)\n            plt.title(\"Histogram of Multiple Columns\")\n            plt.legend()\n        else:\n            # Grid subplots\n            n_cols = 4\n            n_rows = (len(y_columns) + n_cols - 1) // n_cols\n            fig, axes = plt.subplots(n_rows, n_cols, figsize=(figsize[0]*n_cols/2, figsize[1]*n_rows))\n            axes = axes.flatten()\n            \n            for i, col in enumerate(y_columns):\n                sns.histplot(plot_data[col].dropna(), bins=bins, kde=kde, ax=axes[i])\n                axes[i].set_title(f\"Histogram of {col}\")\n                axes[i].tick_params(axis='x', rotation=45)\n            \n            # Hide unused axes\n            for i in range(len(y_columns), len(axes)):\n                axes[i].axis('off')\n    \n    # Set labels\n    if xlabel:\n        plt.xlabel(xlabel)\n    if ylabel:\n        plt.ylabel(ylabel)\n    \n    plt.tight_layout()\n    plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "要绘制直方图的列 (留空则绘制所有数值列)",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "bins",
+          "type": "int",
+          "default": 30,
+          "label": "箱数",
+          "description": "直方图的箱数",
+          "priority": "non-critical",
+          "role": "parameter",
+          "min": 5,
+          "max": 100,
+          "widget": "input-number"
+        },
+        {
+          "name": "kde",
+          "type": "bool",
+          "default": true,
+          "label": "显示密度曲线",
+          "description": "是否在直方图上显示密度曲线",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "checkbox"
+        },
+        {
+          "name": "layout",
+          "type": "str",
+          "default": "子图",
+          "label": "排布方式",
+          "description": "选择图表的排布方式：子图（每行4个）或所有数据显示在一张图",
+          "priority": "non-critical",
+          "role": "parameter",
+          "options": [
+            "子图",
+            "一张图"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "直方图",
+          "label": "图表标题",
+          "description": "直方图的标题",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "xlabel",
+          "type": "str",
+          "default": "",
+          "label": "X轴标签",
+          "description": "X轴的显示标签",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "ylabel",
+          "type": "str",
+          "default": "",
+          "label": "Y轴标签",
+          "description": "Y轴的显示标签",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "tuple",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "图像大小元组，例如 (15, 8)",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    },
+    {
+      "id": "violin_plot",
+      "name": "小提琴图显示",
+      "description": "请对 {VAR_NAME} 绘制小提琴图，展示数据分布特征。支持自定义颜色、带宽等设置。",
+      "category": "数据绘图",
+      "template": "# 小提琴图显示\ndef violin_plot(df: pd.DataFrame, y_columns: List[str] = None, layout: str = \"子图\", \n                title: str = \"小提琴图\", xlabel: str = \"\", ylabel: str = \"\", \n                figsize: tuple = None) -> None:\n    \"\"\"\n    Create violin plot for the given DataFrame.\n\n    Algorithm:\n        name: 小提琴图显示\n        category: 数据绘图\n        prompt: 请对 {VAR_NAME} 绘制小提琴图，展示数据分布特征。支持自定义颜色、带宽等设置。\n        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns\n    \n    Parameters:\n    df (pandas.DataFrame): Input DataFrame.\n        role: input\n    y_columns (list): 要绘制小提琴图的列 (留空则绘制所有数值列)\n        label: Y轴列名\n        widget: column-selector\n        priority: critical\n    layout (str): 选择图表的排布方式：子图（每行4个）或所有数据显示在一张图\n        label: 排布方式\n        options: [\"子图\", \"一张图\"]\n        priority: non-critical\n    title (str): 小提琴图的标题\n        label: 图表标题\n        priority: non-critical\n    xlabel (str): X轴的显示标签\n        label: X轴标签\n        priority: non-critical\n    ylabel (str): Y轴的显示标签\n        label: Y轴标签\n        priority: non-critical\n    figsize (tuple): 图像大小元组，例如 (15, 8)\n        label: 图像尺寸\n        priority: non-critical\n    \n    Returns:\n    None\n    \"\"\"\n    # Determine Y columns\n    if not y_columns:\n        y_columns = df.select_dtypes(include=['number']).columns.tolist()\n    \n    # Set default figsize\n    if figsize is None:\n        figsize = (15, 8)\n    \n    # Filter to selected columns\n    plot_data = df[y_columns].copy()\n    \n    # Create violin plot\n    if len(y_columns) == 1:\n        # Single column\n        plt.figure(figsize=figsize)\n        sns.violinplot(data=plot_data[y_columns[0]].dropna())\n        plt.title(f\"Violin Plot of {y_columns[0]}\")\n        plt.xticks([0], y_columns)\n    else:\n        if layout == \"一张图\":\n            # Multiple columns on one plot\n            plt.figure(figsize=figsize)\n            for col in y_columns:\n                sns.violinplot(data=plot_data[col].dropna(), alpha=0.5, label=col)\n            plt.title(\"Violin Plot of Multiple Columns\")\n            plt.legend()\n        else:\n            # Grid subplots\n            n_cols = 4\n            n_rows = (len(y_columns) + n_cols - 1) // n_cols\n            fig, axes = plt.subplots(n_rows, n_cols, figsize=(figsize[0]*n_cols/2, figsize[1]*n_rows))\n            axes = axes.flatten()\n            \n            for i, col in enumerate(y_columns):\n                sns.violinplot(data=plot_data[col].dropna(), ax=axes[i])\n                axes[i].set_title(f\"Violin Plot of {col}\")\n                axes[i].tick_params(axis='x', rotation=45)\n            \n            # Hide unused axes\n            for i in range(len(y_columns), len(axes)):\n                axes[i].axis('off')\n    \n    # Set labels\n    if xlabel:\n        plt.xlabel(xlabel)\n    if ylabel:\n        plt.ylabel(ylabel)\n    \n    plt.tight_layout()\n    plt.show()\n",
+      "imports": [
+        "import pandas as pd",
+        "import matplotlib.pyplot as plt",
+        "import seaborn as sns"
+      ],
+      "args": [
+        {
+          "name": "y_columns",
+          "type": "list",
+          "default": null,
+          "label": "Y轴列名",
+          "description": "要绘制小提琴图的列 (留空则绘制所有数值列)",
+          "priority": "critical",
+          "role": "parameter",
+          "widget": "column-selector"
+        },
+        {
+          "name": "layout",
+          "type": "str",
+          "default": "子图",
+          "label": "排布方式",
+          "description": "选择图表的排布方式：子图（每行4个）或所有数据显示在一张图",
+          "priority": "non-critical",
+          "role": "parameter",
+          "options": [
+            "子图",
+            "一张图"
+          ],
+          "widget": "select"
+        },
+        {
+          "name": "title",
+          "type": "str",
+          "default": "小提琴图",
+          "label": "图表标题",
+          "description": "小提琴图的标题",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "xlabel",
+          "type": "str",
+          "default": "",
+          "label": "X轴标签",
+          "description": "X轴的显示标签",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "ylabel",
+          "type": "str",
+          "default": "",
+          "label": "Y轴标签",
+          "description": "Y轴的显示标签",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        },
+        {
+          "name": "figsize",
+          "type": "tuple",
+          "default": null,
+          "label": "图像尺寸",
+          "description": "图像大小元组，例如 (15, 8)",
+          "priority": "non-critical",
+          "role": "parameter",
+          "widget": "input-text"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "df",
+          "type": "DataFrame"
+        }
+      ],
+      "outputs": [],
+      "nodeType": "generic"
+    }
+  ]
+}

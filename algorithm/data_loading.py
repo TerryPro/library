@@ -1,6 +1,8 @@
 import pandas as pd
 import os
+import sys
 from typing import Any, Optional
+from IPython.display import display
 
 def load_csv(filepath: str = "dataset/data.csv", timeIndex: str = "") -> Optional[pd.DataFrame]:
     """
@@ -9,7 +11,7 @@ def load_csv(filepath: str = "dataset/data.csv", timeIndex: str = "") -> Optiona
     Algorithm:
         name: 加载 CSV
         category: load_data
-        prompt: 请加载 CSV 文件。使用 pandas.read_csv 读取指定路径的文件，并显示前几行数据。
+        prompt: 使用 pandas 读取位于 "{filepath}" 的 CSV 文件。如果加载后的数据中包含时间类型列，则将其转换为时间类型并设为索引。读取完成后，显示数据的前 5 行以供预览。
         imports: import pandas as pd, import os
     
     Parameters:
@@ -50,7 +52,7 @@ def import_variable(variable_name: str = "") -> pd.DataFrame:
     Algorithm:
         name: 引入变量
         category: load_data
-        prompt: 请引入已存在的 DataFrame 变量 {variable_name}。创建其副本或引用，以便后续分析使用。
+        prompt: 从全局命名空间中引入变量 "{variable_name}"。如果该变量是 DataFrame，则创建其副本以避免修改原始数据；否则直接引用。引入后打印变量形状并显示前 5 行。
         imports: import pandas as pd
     
     Parameters:
@@ -62,14 +64,19 @@ def import_variable(variable_name: str = "") -> pd.DataFrame:
     Returns:
     pandas.DataFrame: Imported variable.
     """
-    import globals
-    
+  
     try:
-        if variable_name not in globals():
+        source_var = None
+        # Try to find variable in __main__ (notebook namespace) first
+        if variable_name in sys.modules['__main__'].__dict__:
+            source_var = sys.modules['__main__'].__dict__[variable_name]
+        elif variable_name in globals():
+            source_var = globals()[variable_name]
+            
+        if source_var is None:
             print(f"Error: Variable '{variable_name}' not found in global scope.")
             return None
         
-        source_var = globals()[variable_name]
         if hasattr(source_var, 'copy'):
             result = source_var.copy()
         else:
@@ -93,7 +100,7 @@ def export_data(df: pd.DataFrame, global_name: str = "exported_data") -> None:
     Algorithm:
         name: 引出变量
         category: load_data
-        prompt: 请将 {VAR_NAME} 引出到全局环境。变量名为 {global_name}。
+        prompt: 将变量 {VAR_NAME} 导出到全局变量 "{global_name}" 中，以便在其他 Notebook 单元格或分析步骤中使用。导出成功后显示确认信息。
     
     Parameters:
     df (pandas.DataFrame): DataFrame to export.
@@ -105,10 +112,10 @@ def export_data(df: pd.DataFrame, global_name: str = "exported_data") -> None:
     Returns:
     None
     """
-    import globals
     
     try:
-        globals()[global_name] = df
+        # Export to __main__ (notebook namespace)
+        setattr(sys.modules['__main__'], global_name, df)
         print(f"Successfully exported to global variable: '{global_name}'")
         if hasattr(df, 'shape'):
             print(f"Variable shape: {df.shape}")
