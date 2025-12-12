@@ -17,6 +17,7 @@ def trend_ohlc(df, y_columns=None, resample_freq="5T", title="OHLC蜡烛图", fi
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.
+        role: input
     y_columns (list): Columns to resample.
         label: Y轴列名
         widget: column-selector

@@ -17,12 +17,14 @@ def trend_envelope(df, y_columns=None, window_duration="1min", title="数据包�
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.
+        role: input
     y_columns (list): Columns to plot envelope for.
         label: Y轴列名
         widget: column-selector
         priority: critical
     window_duration (str): Time window duration.
         label: 窗口时长
+        widget: select
         options: ["10s", "30s", "1min", "5min", "15min", "30min", "1h", "2h", "6h", "12h", "1D"]
         priority: critical
     title (str): Chart title.

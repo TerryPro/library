@@ -19,10 +19,12 @@ def resampling_down(df: pd.DataFrame, rule: str = "1小时", agg_method: str = "
         role: input
     rule (str): 目标重采样频率
         label: 频率规则
+        widget: select
         options: ["15秒", "30秒", "1分钟", "5分钟", "15分钟", "30分钟", "1小时"]
         priority: critical
     agg_method (str): 降采样时使用的聚合函数
         label: 聚合方法
+        widget: select
         options: ["均值", "求和", "最小值", "最大值", "第一个值", "最后一个值", "中位数", "标准差", "方差", "计数"]
         priority: critical
     

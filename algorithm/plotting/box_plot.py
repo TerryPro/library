@@ -29,6 +29,7 @@ def box_plot(df: pd.DataFrame, y_columns: List[str] = None, group_by: str = "", 
         priority: non-critical
     layout (str): 选择图表的排布方式：子图（每行4个）或所有数据显示在一张图
         label: 排布方式
+        widget: select
         options: ["子图", "一张图"]
         priority: non-critical
     title (str): 图表的标题

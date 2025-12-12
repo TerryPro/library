@@ -17,6 +17,7 @@ def merge_dfs(left, right, how="inner", on=None) -> pd.DataFrame:
         role: input
     how (str): Merge method (inner, outer, left, right).
         label: 合并方式
+        widget: select
         options: ["inner", "outer", "left", "right"]
         priority: critical
     on (str): Column to merge on.

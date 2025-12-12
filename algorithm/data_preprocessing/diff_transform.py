@@ -31,6 +31,7 @@ def diff_transform(df: pd.DataFrame, order: int = 1, periods: int = 1, axis: int
         priority: critical
     axis (int): 沿哪个轴进行差分，0=行（时间轴），1=列
         label: 差分轴
+        widget: select
         options: [0, 1]
         min: 0
         max: 1
@@ -38,6 +39,7 @@ def diff_transform(df: pd.DataFrame, order: int = 1, periods: int = 1, axis: int
         priority: non-critical
     fill_method (str): 差分后缺失值的填充方法，留空则不填充
         label: 填充方法
+        widget: select
         options: ["", "ffill", "bfill"]
         priority: non-critical
     

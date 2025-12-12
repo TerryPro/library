@@ -17,6 +17,7 @@ def trend_loess(df, y_columns=None, frac=0.1, title="LOESS趋势图", figsize=No
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.
+        role: input
     y_columns (list): Columns to plot LOESS for.
         label: Y轴列名
         widget: column-selector

@@ -10,6 +10,7 @@ setup(
         "numpy",
         "matplotlib",
         "seaborn",
+        "ipywidgets",
         # Add other dependencies if needed
     ],
     python_requires=">=3.8",

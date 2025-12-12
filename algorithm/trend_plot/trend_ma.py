@@ -17,6 +17,7 @@ def trend_ma(df, y_columns=None, window_size=60, center=True, title="移动平�
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.
+        role: input
     y_columns (list): Columns to plot moving average for.
         label: Y轴列名
         widget: column-selector

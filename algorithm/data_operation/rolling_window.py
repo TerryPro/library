@@ -22,6 +22,7 @@ def rolling_window(df, columns, window=5, func="mean", min_periods=1, center=Fal
         priority: critical
     func (str): Aggregation function to apply.
         label: 统计函数
+        widget: select
         options: ["sum", "mean", "min", "max", "std", "var"]
         priority: critical
     min_periods (int): Minimum number of observations required in window.

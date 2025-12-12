@@ -19,6 +19,7 @@ def data_fill(df: pd.DataFrame, method: str = "均值", value: float = 0.0, axis
         role: input
     method (str): 选择缺失值填充方法
         label: 填充方法
+        widget: select
         options: ["均值", "中位数", "众数", "前向填充", "后向填充", "常数", "线性插值", "最近邻插值"]
         priority: critical
     value (float): 当使用常数填充时，指定填充的值
@@ -26,6 +27,7 @@ def data_fill(df: pd.DataFrame, method: str = "均值", value: float = 0.0, axis
         priority: non-critical
     axis (int): 沿哪个轴进行填充，0=按列填充，1=按行填充
         label: 填充轴
+        widget: select
         options: [0, 1]
         priority: non-critical
     limit (int): 限制连续缺失值的填充数量，0表示无限制

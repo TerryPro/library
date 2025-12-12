@@ -19,6 +19,7 @@ def feature_scaling(df: pd.DataFrame, method: str = "standard", with_mean: bool 
         role: input
     method (str): 选择缩放方法：standard（Z-score）、minmax（0-1归一化）、robust（鲁棒缩放）、maxabs（最大绝对值缩放）
         label: 缩放方法
+        widget: select
         options: ["standard", "minmax", "robust", "maxabs"]
         priority: critical
     with_mean (bool): 对于standard和robust方法，是否减去均值

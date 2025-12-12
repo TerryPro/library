@@ -17,6 +17,7 @@ def trend_stl_trend(df, y_columns=None, seasonal=7, robust=True, title="STL 趋�
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.
+        role: input
     y_columns (list): Columns to decompose.
         label: Y轴列名
         widget: column-selector

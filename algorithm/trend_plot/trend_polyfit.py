@@ -17,6 +17,7 @@ def trend_polyfit(df, y_columns=None, degree=2, title="多项式趋势拟合图"
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.
+        role: input
     y_columns (list): Columns to perform polynomial fitting on.
         label: Y轴列名
         widget: column-selector

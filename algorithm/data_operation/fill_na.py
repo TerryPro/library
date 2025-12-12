@@ -18,6 +18,7 @@ def fill_na(df, value=None, method=None) -> pd.DataFrame:
         priority: non-critical
     method (str): Method to use for filling missing values (ffill, bfill).
         label: 填充方法
+        widget: select
         options: ["ffill", "bfill"]
         priority: non-critical
     

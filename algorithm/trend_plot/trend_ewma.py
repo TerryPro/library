@@ -17,6 +17,7 @@ def trend_ewma(df, y_columns=None, span=60, title="指数加权趋势图", figsi
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.
+        role: input
     y_columns (list): Columns to plot EWMA for.
         label: Y轴列名
         widget: column-selector

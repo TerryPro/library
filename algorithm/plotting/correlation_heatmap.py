@@ -20,6 +20,7 @@ def correlation_heatmap(df: pd.DataFrame, method: str = "pearson", title: str = 
         role: input
     method (str): 计算相关系数的方法
         label: 相关系数方法
+        widget: select
         options: ["pearson", "kendall", "spearman"]
         priority: non-critical
     title (str): 图表的标题

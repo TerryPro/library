@@ -25,6 +25,7 @@ def violin_plot(df: pd.DataFrame, y_columns: List[str] = None, layout: str = "�
         priority: critical
     layout (str): 选择图表的排布方式：子图（每行4个）或所有数据显示在一张图
         label: 排布方式
+        widget: select
         options: ["子图", "一张图"]
         priority: non-critical
     title (str): 小提琴图的标题

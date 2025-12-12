@@ -13,7 +13,7 @@ def trend_plot(df, x_column="", y_columns=None, plot_type="叠加显示", title=
         name: 通用趋势图 (Trend)
         category: trend_plot
         prompt: 请根据配置绘制 {VAR_NAME} 的趋势图。支持自定义 X 轴、Y 轴列、标题、网格等设置。
-        imports: import matplotlib.pyplot as plt, import pandas as pd, import math
+        imports: import matplotlib.pyplot as plt, import pandas as pd, import math, import numpy as np
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.
@@ -28,6 +28,7 @@ def trend_plot(df, x_column="", y_columns=None, plot_type="叠加显示", title=
         priority: critical
     plot_type (str): Plot type (叠加显示, 堆叠显示, 分栏显示, 网格显示).
         label: 绘图方式
+        widget: select
         options: ["叠加显示", "堆叠显示", "分栏显示", "网格显示"]
         priority: critical
     title (str): Chart title.
