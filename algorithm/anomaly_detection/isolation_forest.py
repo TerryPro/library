@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
-def isolation_forest(df, contamination=0.05) -> pd.DataFrame:
+def isolation_forest(df: pd.DataFrame, contamination: float = 0.05) -> pd.DataFrame:
     """
     Detect anomalies using Isolation Forest algorithm.
 

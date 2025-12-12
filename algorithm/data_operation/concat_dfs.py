@@ -1,6 +1,6 @@
 import pandas as pd
 
-def concat_dfs(df1, df2, axis=0) -> pd.DataFrame:
+def concat_dfs(df1: pd.DataFrame, df2: pd.DataFrame, axis: int = 0) -> pd.DataFrame:
     """
     Concatenate two DataFrames.
 

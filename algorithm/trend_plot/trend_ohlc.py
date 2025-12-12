@@ -5,7 +5,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_ohlc(df, y_columns=None, resample_freq="5T", title="OHLC蜡烛图", figsize=None) -> None:
+def trend_ohlc(df: pd.DataFrame, y_columns: list = None, resample_freq: str = "5T", title: str = "OHLC蜡烛图", figsize: tuple = None) -> None:
     """
     Plot OHLC (Open-High-Low-Close) candlestick chart for a DataFrame.
 

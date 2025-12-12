@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
-def moving_window_iqr_anomaly(df, columns, window=60, multiplier=1.5, center=True) -> pd.DataFrame:
+def moving_window_iqr_anomaly(df: pd.DataFrame, columns: list, window: int = 60, multiplier: float = 1.5, center: bool = True) -> pd.DataFrame:
     """
     Detect anomalies using moving window IQR method.
 

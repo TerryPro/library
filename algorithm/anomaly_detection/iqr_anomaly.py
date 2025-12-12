@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
-def iqr_anomaly(df, columns, multiplier=1.5) -> pd.DataFrame:
+def iqr_anomaly(df: pd.DataFrame, columns: list, multiplier: float = 1.5) -> pd.DataFrame:
     """
     Detect anomalies using IQR (Interquartile Range) method.
 

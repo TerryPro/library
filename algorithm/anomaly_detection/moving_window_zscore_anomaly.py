@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
-def moving_window_zscore_anomaly(df, columns, window=60, threshold=3.0, center=True) -> pd.DataFrame:
+def moving_window_zscore_anomaly(df: pd.DataFrame, columns: list, window: int = 60, threshold: float = 3.0, center: bool = True) -> pd.DataFrame:
     """
     Detect anomalies using moving window Z-score method.
 

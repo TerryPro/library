@@ -5,7 +5,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_stl_trend(df, y_columns=None, seasonal=7, robust=True, title="STL 趋势分量图", figsize=None) -> None:
+def trend_stl_trend(df: pd.DataFrame, y_columns: list = None, seasonal: int = 7, robust: bool = True, title: str = "STL 趋势分量图", figsize: tuple = None) -> None:
     """
     Plot STL (Seasonal-Trend decomposition using LOESS) trend component for a DataFrame.
 

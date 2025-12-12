@@ -1,6 +1,6 @@
 import pandas as pd
 
-def merge_dfs(left, right, how="inner", on=None) -> pd.DataFrame:
+def merge_dfs(left: pd.DataFrame, right: pd.DataFrame, how: str = "inner", on: str = None) -> pd.DataFrame:
     """
     Merge two DataFrames.
 

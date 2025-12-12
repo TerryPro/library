@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
-def zscore_anomaly(df, columns, threshold=3.0) -> pd.DataFrame:
+def zscore_anomaly(df: pd.DataFrame, columns: list, threshold: float = 3.0) -> pd.DataFrame:
     """
     Detect anomalies using Z-score method.
 

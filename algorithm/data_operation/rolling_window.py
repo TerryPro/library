@@ -1,6 +1,6 @@
 import pandas as pd
 
-def rolling_window(df, columns, window=5, func="mean", min_periods=1, center=False) -> pd.DataFrame:
+def rolling_window(df: pd.DataFrame, columns: list, window: int = 5, func: str = "mean", min_periods: int = 1, center: bool = False) -> pd.DataFrame:
     """
     Apply rolling window calculation to a DataFrame.
 

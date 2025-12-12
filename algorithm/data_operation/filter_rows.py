@@ -1,6 +1,6 @@
 import pandas as pd
 
-def filter_rows(df, condition) -> pd.DataFrame:
+def filter_rows(df: pd.DataFrame, condition: str) -> pd.DataFrame:
     """
     Filter rows based on a condition string.
 

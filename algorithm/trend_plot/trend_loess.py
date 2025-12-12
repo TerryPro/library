@@ -5,7 +5,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_loess(df, y_columns=None, frac=0.1, title="LOESS趋势图", figsize=None) -> None:
+def trend_loess(df: pd.DataFrame, y_columns: list = None, frac: float = 0.1, title: str = "LOESS趋势图", figsize: tuple = None) -> None:
     """
     Plot LOESS (Locally Weighted Scatterplot Smoothing) trend chart for a DataFrame.
 

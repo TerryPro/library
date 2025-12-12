@@ -5,7 +5,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_ewma(df, y_columns=None, span=60, title="指数加权趋势图", figsize=None) -> None:
+def trend_ewma(df: pd.DataFrame, y_columns: list = None, span: int = 60, title: str = "指数加权趋势图", figsize: tuple = None) -> None:
     """
     Plot EWMA (Exponentially Weighted Moving Average) trend chart for a DataFrame.
 

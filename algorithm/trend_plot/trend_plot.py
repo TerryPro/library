@@ -5,7 +5,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_plot(df, x_column="", y_columns=None, plot_type="叠加显示", title="趋势图", xlabel="", ylabel="", grid=True, figsize=None) -> None:
+def trend_plot(df: pd.DataFrame, x_column: str = "", y_columns: list = None, plot_type: str = "叠加显示", title: str = "趋势图", xlabel: str = "", ylabel: str = "", grid: bool = True, figsize: tuple = None) -> None:
     """
     Plot trend chart for a DataFrame.
 

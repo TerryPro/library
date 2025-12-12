@@ -1,6 +1,6 @@
 import pandas as pd
 
-def fill_na(df, value=None, method=None) -> pd.DataFrame:
+def fill_na(df: pd.DataFrame, value: any = None, method: str = None) -> pd.DataFrame:
     """
     Fill missing values in a DataFrame.
 

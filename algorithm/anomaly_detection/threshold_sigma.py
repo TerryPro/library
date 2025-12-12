@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
-def threshold_sigma(df, columns, window=20, sigma=3.0) -> pd.DataFrame:
+def threshold_sigma(df: pd.DataFrame, columns: list, window: int = 20, sigma: float = 3.0) -> pd.DataFrame:
     """
     Detect anomalies using 3-sigma threshold method.
 

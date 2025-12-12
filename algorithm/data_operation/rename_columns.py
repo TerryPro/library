@@ -1,6 +1,6 @@
 import pandas as pd
 
-def rename_columns(df, columns_map) -> pd.DataFrame:
+def rename_columns(df: pd.DataFrame, columns_map: dict) -> pd.DataFrame:
     """
     Rename columns in a DataFrame.
 

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
-def change_point(df, n_bkps=5, figsize=None) -> pd.DataFrame:
+def change_point(df: pd.DataFrame, n_bkps: int = 5, figsize: tuple = None) -> pd.DataFrame:
     """
     Detect change points in a time series using binary segmentation.
 

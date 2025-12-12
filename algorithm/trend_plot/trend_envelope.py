@@ -5,7 +5,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_envelope(df, y_columns=None, window_duration="1min", title="数据包络线图", figsize=None) -> None:
+def trend_envelope(df: pd.DataFrame, y_columns: list = None, window_duration: str = "1min", title: str = "数据包络线图", figsize: tuple = None) -> None:
     """
     Plot data envelope for a DataFrame.
 

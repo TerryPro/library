@@ -5,7 +5,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_polyfit(df, y_columns=None, degree=2, title="多项式趋势拟合图", figsize=None) -> None:
+def trend_polyfit(df: pd.DataFrame, y_columns: list = None, degree: int = 2, title: str = "多项式趋势拟合图", figsize: tuple = None) -> None:
     """
     Plot polynomial trend fit for a DataFrame.
 

@@ -1,6 +1,6 @@
 import pandas as pd
 
-def select_columns(df, columns) -> pd.DataFrame:
+def select_columns(df: pd.DataFrame, columns: list) -> pd.DataFrame:
     """
     Select specified columns from a DataFrame.
 

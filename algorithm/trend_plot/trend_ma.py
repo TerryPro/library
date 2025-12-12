@@ -5,7 +5,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_ma(df, y_columns=None, window_size=60, center=True, title="移动平均趋势图", figsize=None) -> None:
+def trend_ma(df: pd.DataFrame, y_columns: list = None, window_size: int = 60, center: bool = True, title: str = "移动平均趋势图", figsize: tuple = None) -> None:
     """
     Plot moving average trend chart for a DataFrame.
 
