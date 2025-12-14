@@ -13,7 +13,7 @@ def trend_envelope(df: pd.DataFrame, y_columns: list = None, window_duration: st
         name: 数据包络线绘制
         category: trend_plot
         prompt: 请对{VAR_NAME} 绘制数据包络线。使用滚动窗口的最大值和最小值计算上、下包络线，并与原始曲线一起绘制。
-        imports: import pandas as pd, import matplotlib.pyplot as plt, import numpy as np
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

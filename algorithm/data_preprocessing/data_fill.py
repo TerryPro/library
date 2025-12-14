@@ -12,7 +12,7 @@ def data_fill(df: pd.DataFrame, method: str = "均值", value: float = 0.0, axis
         name: 数据填充
         category: data_preprocessing
         prompt: 请对 {VAR_NAME} 进行缺失值填充。支持多种填充方法，包括均值、中位数、众数、前向填充、后向填充、常数填充等。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

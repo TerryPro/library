@@ -11,7 +11,7 @@ def autocorrelation(df: pd.DataFrame, lags: int = 50, figsize: tuple = None) -> 
         name: 自相关分析 (ACF)
         category: eda
         prompt: 请对{VAR_NAME} 进行自相关分析。计算并绘制 ACF 图，使用 statsmodels.graphics.tsaplots.plot_acf，以发现周期性模式。
-        imports: import matplotlib.pyplot as plt, from statsmodels.graphics.tsaplots import plot_acf
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

@@ -13,7 +13,7 @@ def correlation_heatmap(df: pd.DataFrame, method: str = "pearson", title: str = 
         name: 相关性热力图
         category: plotting
         prompt: 请对 {VAR_NAME} 进行相关性分析。使用seaborn的heatmap函数，绘制各列之间的相关性热力图。
-        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

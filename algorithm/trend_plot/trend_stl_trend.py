@@ -13,7 +13,7 @@ def trend_stl_trend(df: pd.DataFrame, y_columns: list = None, seasonal: int = 7,
         name: STL 趋势分量
         category: trend_plot
         prompt: 请对{VAR_NAME} 执行 STL 分解并提取趋势分量。使用 statsmodels.tsa.seasonal.STL 提取趋势，绘制趋势曲线并与原始数据对比显示。
-        imports: from statsmodels.tsa.seasonal import STL, import matplotlib.pyplot as plt, import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

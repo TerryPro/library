@@ -12,7 +12,7 @@ def feature_scaling(df: pd.DataFrame, method: str = "standard", with_mean: bool 
         name: 数据标准化/归一化
         category: data_preprocessing
         prompt: 请对 {VAR_NAME} 进行特征缩放。支持多种缩放方法，直接修改原始列。
-        imports: import pandas as pd, from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, MaxAbsScaler
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

@@ -8,7 +8,7 @@ def rolling_window(df: pd.DataFrame, columns: list, window: int = 5, func: str =
         name: 窗口计算
         category: data_operation
         prompt: 请对 {VAR_NAME} 进行窗口计算。使用窗口大小 {window} 对列 {columns} 应用 {func} 函数。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

@@ -12,7 +12,7 @@ def import_variable(variable_name: str = "") -> pd.DataFrame:
         name: 引入变量
         category: load_data
         prompt: 从全局命名空间中引入变量 "{variable_name}"。如果该变量是 DataFrame，则创建其副本以避免修改原始数据；否则直接引用。引入后打印变量形状并显示前 5 行。
-        imports: import pandas as pd
+
     
     Parameters:
     variable_name (str): 当前会话中的DataFrame变量名

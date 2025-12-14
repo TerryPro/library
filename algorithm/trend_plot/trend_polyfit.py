@@ -13,7 +13,7 @@ def trend_polyfit(df: pd.DataFrame, y_columns: list = None, degree: int = 2, tit
         name: 多项式趋势拟合
         category: trend_plot
         prompt: 请对{VAR_NAME} 进行多项式趋势拟合并绘制趋势。使用 numpy.polyfit 对指定阶数进行拟合，绘制拟合曲线与原始数据，并计算与输出拟合优度（R²）。
-        imports: import numpy as np, import matplotlib.pyplot as plt, import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

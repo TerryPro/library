@@ -11,7 +11,7 @@ def isolation_forest(df: pd.DataFrame, contamination: float = 0.05) -> pd.DataFr
         name: 孤立森林异常检测
         category: anomaly_detection
         prompt: 请对 {VAR_NAME} 执行孤立森林异常检测。设置异常比例为 {contamination}。
-        imports: import pandas as pd, from sklearn.ensemble import IsolationForest
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

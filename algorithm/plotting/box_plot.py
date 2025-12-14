@@ -14,7 +14,7 @@ def box_plot(df: pd.DataFrame, y_columns: List[str] = None, group_by: str = "", 
         name: 箱型图绘制
         category: plotting
         prompt: 请对 {VAR_NAME} 绘制箱型图，展示数据分布特征。支持单变量、多变量和分组箱型图。
-        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

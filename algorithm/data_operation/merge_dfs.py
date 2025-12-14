@@ -8,7 +8,7 @@ def merge_dfs(left: pd.DataFrame, right: pd.DataFrame, how: str = "inner", on: s
         name: 数据合并 (Merge)
         category: data_operation
         prompt: 请合并两个数据框 {left} 和 {right}。根据指定的合并方式（inner, outer, left, right）和连接键进行 pd.merge 操作。
-        imports: import pandas as pd
+
     
     Parameters:
     left (pandas.DataFrame): Left DataFrame.

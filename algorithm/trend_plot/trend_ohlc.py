@@ -13,7 +13,7 @@ def trend_ohlc(df: pd.DataFrame, y_columns: list = None, resample_freq: str = "5
         name: OHLC重采样
         category: trend_plot
         prompt: 请对{VAR_NAME} 进行OHLC重采样。将时间序列数据重采样为指定频率的开盘价(Open)、最高价(High)、最低价(Low)和收盘价(Close)，并绘制蜡烛图。
-        imports: import pandas as pd, import matplotlib.pyplot as plt, import mplfinance.original_flavor as mpf
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

@@ -14,7 +14,7 @@ def histogram(df: pd.DataFrame, y_columns: List[str] = None, bins: int = 30, kde
         name: 直方图显示
         category: plotting
         prompt: 请对 {VAR_NAME} 绘制直方图，展示数据分布特征。支持自定义箱数、颜色、密度曲线等设置。
-        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

@@ -13,7 +13,7 @@ def trend_loess(df: pd.DataFrame, y_columns: list = None, frac: float = 0.1, tit
         name: LOESS 趋势
         category: trend_plot
         prompt: 请对{VAR_NAME} 绘制 LOESS 平滑趋势。使用 statsmodels.nonparametric.smoothers_lowess.lowess 进行平滑并绘制趋势曲线；若缺少该库，可退化为 rolling().mean()。
-        imports: import statsmodels.api as sm, import matplotlib.pyplot as plt, import numpy as np, import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

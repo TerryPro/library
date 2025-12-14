@@ -8,7 +8,7 @@ def select_columns(df: pd.DataFrame, columns: list) -> pd.DataFrame:
         name: 选择列
         category: data_operation
         prompt: 请从 {VAR_NAME} 中选择指定的列 {columns}，生成新的 DataFrame。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

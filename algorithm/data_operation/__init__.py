@@ -1,6 +1,7 @@
 from .concat_dfs import concat_dfs
 from .fill_na import fill_na
 from .filter_rows import filter_rows
+from .first import first
 from .merge_dfs import merge_dfs
 from .rename_columns import rename_columns
 from .rolling_window import rolling_window

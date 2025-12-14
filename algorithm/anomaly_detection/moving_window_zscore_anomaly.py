@@ -11,7 +11,7 @@ def moving_window_zscore_anomaly(df: pd.DataFrame, columns: list, window: int = 
         name: 移动窗口 Z-Score 检测
         category: anomaly_detection
         prompt: 请对 {VAR_NAME} 执行移动窗口 Z-Score 异常检测。窗口大小 {window}，阈值 {threshold}。
-        imports: import pandas as pd, import numpy as np
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

@@ -12,7 +12,7 @@ def diff_transform(df: pd.DataFrame, order: int = 1, periods: int = 1, axis: int
         name: 差分变换
         category: data_preprocessing
         prompt: 请对 {VAR_NAME} 进行差分变换，以消除趋势并使数据平稳。可配置差分阶数和滞后步数。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

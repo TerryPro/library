@@ -11,7 +11,7 @@ def moving_window_iqr_anomaly(df: pd.DataFrame, columns: list, window: int = 60,
         name: 移动窗口 IQR 检测
         category: anomaly_detection
         prompt: 请对 {VAR_NAME} 执行移动窗口 IQR 异常检测。窗口大小 {window}，倍数 {multiplier}。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

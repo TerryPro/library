@@ -8,7 +8,7 @@ def concat_dfs(df1: pd.DataFrame, df2: pd.DataFrame, axis: int = 0) -> pd.DataFr
         name: 数据连接 (Concat)
         category: data_operation
         prompt: 请连接两个 DataFrame {df1} 和 {df2}。沿轴 {axis} 进行连接。
-        imports: import pandas as pd
+
     
     Parameters:
     df1 (pandas.DataFrame): First DataFrame.

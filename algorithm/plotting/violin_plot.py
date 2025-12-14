@@ -14,7 +14,7 @@ def violin_plot(df: pd.DataFrame, y_columns: List[str] = None, layout: str = "�
         name: 小提琴图显示
         category: plotting
         prompt: 请对 {VAR_NAME} 绘制小提琴图，展示数据分布特征。支持自定义颜色、带宽等设置。
-        imports: import pandas as pd, import matplotlib.pyplot as plt, import seaborn as sns
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

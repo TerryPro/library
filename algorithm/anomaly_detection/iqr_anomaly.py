@@ -11,7 +11,7 @@ def iqr_anomaly(df: pd.DataFrame, columns: list, multiplier: float = 1.5) -> pd.
         name: IQR 异常检测
         category: anomaly_detection
         prompt: 请对 {VAR_NAME} 执行 IQR 异常检测。使用 IQR 倍数 {multiplier}。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

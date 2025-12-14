@@ -13,7 +13,7 @@ def trend_ma(df: pd.DataFrame, y_columns: list = None, window_size: int = 60, ce
         name: 移动平均趋势
         category: trend_plot
         prompt: 请对{VAR_NAME} 绘制移动平均趋势线。使用 pandas 的 rolling().mean() 计算趋势线，并用 matplotlib 绘制原始曲线与趋势线，添加网格、图例与中文标签。
-        imports: import pandas as pd, import matplotlib.pyplot as plt
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

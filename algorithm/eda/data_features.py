@@ -11,7 +11,7 @@ def data_features(df: pd.DataFrame) -> pd.DataFrame:
         name: 数据特征
         category: eda
         prompt: 请对{VAR_NAME} 进行数据特征计算。使用pandas的describe()函数，计算各列的基本统计特征。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

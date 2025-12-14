@@ -11,7 +11,7 @@ def zscore_anomaly(df: pd.DataFrame, columns: list, threshold: float = 3.0) -> p
         name: Z-Score 异常检测
         category: anomaly_detection
         prompt: 请对 {VAR_NAME} 执行 Z-Score 异常检测。使用阈值 {threshold}。
-        imports: import pandas as pd, import numpy as np
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

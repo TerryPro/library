@@ -8,7 +8,7 @@ def rename_columns(df: pd.DataFrame, columns_map: dict) -> pd.DataFrame:
         name: 重命名列
         category: data_operation
         prompt: 请对 {VAR_NAME} 的列进行重命名。使用映射关系 {columns_map}。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

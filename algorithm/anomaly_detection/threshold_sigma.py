@@ -11,7 +11,7 @@ def threshold_sigma(df: pd.DataFrame, columns: list, window: int = 20, sigma: fl
         name: 3-Sigma 异常检测
         category: anomaly_detection
         prompt: 请对 {VAR_NAME} 执行 3-Sigma 异常检测。使用窗口大小 {window} 和阈值 {sigma}。
-        imports: import pandas as pd, import numpy as np
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

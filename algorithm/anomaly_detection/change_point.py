@@ -11,7 +11,7 @@ def change_point(df: pd.DataFrame, n_bkps: int = 5, figsize: tuple = None) -> pd
         name: 变点检测
         category: anomaly_detection
         prompt: 请对 {VAR_NAME} 执行变点检测。检测 {n_bkps} 个变点。
-        imports: import pandas as pd, import ruptures as rpt, import matplotlib.pyplot as plt
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame with time series data.

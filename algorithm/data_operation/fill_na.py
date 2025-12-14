@@ -8,7 +8,7 @@ def fill_na(df: pd.DataFrame, value: any = None, method: str = None) -> pd.DataF
         name: 填充缺失值
         category: data_operation
         prompt: 请对 {VAR_NAME} 填充缺失值。使用值 {value} 或方法 {method} 进行填充。
-        imports: import pandas as pd, import numpy as np
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

@@ -9,6 +9,7 @@ import pkgutil
 import inspect
 import importlib
 import re
+import ast
 import algorithm
 
 class AlgorithmWidget(widgets.VBox):
@@ -156,6 +157,10 @@ class AlgorithmWidget(widgets.VBox):
         algo_info['id'] = func_name
         algo_info['template'] = inspect.getsource(func)
         
+        # Extract imports from the module file instead of docstring
+        if 'imports' not in algo_info or not algo_info['imports']:
+            algo_info['imports'] = self.extract_imports_from_func(func)
+        
         # Parse Parameters
         params_dict = self.parse_docstring_params(doc)
         
@@ -270,6 +275,55 @@ class AlgorithmWidget(widgets.VBox):
                     else:
                         metadata[key] = value
         return metadata
+    
+    def extract_imports_from_func(self, func):
+        """Extract import statements from the module containing the function."""
+        try:
+            # Get the module where the function is defined
+            module = inspect.getmodule(func)
+            if module is None:
+                return []
+            
+            # Try to get the module's source file
+            try:
+                module_file = inspect.getsourcefile(module)
+                if module_file:
+                    with open(module_file, 'r', encoding='utf-8') as f:
+                        module_source = f.read()
+                    return self.extract_imports_from_source(module_source)
+            except Exception:
+                pass
+            
+            # Fallback: try to get source from the function itself
+            source = inspect.getsource(func)
+            return self.extract_imports_from_source(source)
+        except Exception as e:
+            # print(f"Warning: Failed to extract imports from {func.__name__}: {e}")
+            return []
+    
+    def extract_imports_from_source(self, source):
+        """Extract import statements from source code string."""
+        try:
+            imports = []
+            tree = ast.parse(source)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for name in node.names:
+                        if name.asname:
+                            imports.append(f"import {name.name} as {name.asname}")
+                        else:
+                            imports.append(f"import {name.name}")
+                elif isinstance(node, ast.ImportFrom):
+                    module = node.module or ""
+                    for name in node.names:
+                        if name.asname:
+                            imports.append(f"from {module} import {name.name} as {name.asname}")
+                        else:
+                            imports.append(f"from {module} import {name.name}")
+            return imports
+        except Exception as e:
+            # print(f"Warning: Failed to extract imports from source: {e}")
+            return []
 
     def parse_docstring_params(self, docstring):
         if not docstring:
@@ -451,6 +505,40 @@ class AlgorithmWidget(widgets.VBox):
             if not name.startswith('_') and isinstance(var, pd.DataFrame):
                 dfs.append(name)
         return sorted(dfs)
+    
+    def get_dataset_csv_files(self):
+        """Get all CSV files from the dataset directory
+        
+        Returns:
+            list of tuples: [(filename, absolute_path), ...]
+                filename: just the filename for display (e.g., 'data.csv')
+                absolute_path: full absolute path (e.g., 'D:\\project\\dataset\\data.csv')
+        """
+        # Try multiple possible locations for dataset directory
+        possible_paths = [
+            os.path.join(os.getcwd(), 'dataset'),
+            os.path.join(os.path.dirname(os.getcwd()), 'dataset'),
+            'dataset'
+        ]
+        
+        for dataset_path in possible_paths:
+            try:
+                if os.path.exists(dataset_path) and os.path.isdir(dataset_path):
+                    csv_files = []
+                    abs_dataset_path = os.path.abspath(dataset_path)
+                    for filename in os.listdir(dataset_path):
+                        if filename.endswith('.csv'):
+                            # Create absolute path
+                            absolute_path = os.path.join(abs_dataset_path, filename)
+                            # Return tuple: (display_name, value)
+                            csv_files.append((filename, absolute_path))
+                    if csv_files:
+                        # Sort by filename
+                        return sorted(csv_files, key=lambda x: x[0])
+            except Exception:
+                continue
+        
+        return []
 
     def build_params_widgets(self, algo):
         widgets_list = []
@@ -535,11 +623,41 @@ class AlgorithmWidget(widgets.VBox):
         
         widget = None
         
-        if options:
+        # Special handling for file-selector: load CSV files from dataset directory
+        if w_type == 'file-selector':
+            csv_files = self.get_dataset_csv_files()  # Returns [(filename, abs_path), ...]
+            if csv_files:
+                # csv_files is list of tuples: [(filename, absolute_path), ...]
+                # Dropdown will display filename but use absolute_path as value
+                
+                # Find default value - check if default matches any absolute path
+                default_value = csv_files[0][1] if csv_files else None  # Default to first file's abs path
+                if default:
+                    # Check if default matches any absolute path or filename
+                    for filename, abs_path in csv_files:
+                        if default == abs_path or default == filename or default.endswith(filename):
+                            default_value = abs_path
+                            break
+                
+                widget = widgets.Dropdown(
+                    options=csv_files,  # List of (label, value) tuples
+                    value=default_value,
+                    description=label,
+                    style=self.common_style,
+                    layout=self.common_layout
+                )
+            else:
+                # Fallback to text input if no files found
+                widget = widgets.Text(
+                    value=str(default) if default is not None else '',
+                    description=label,
+                    style=self.common_style,
+                    layout=self.common_layout
+                )
+        elif options:
             widget = widgets.Dropdown(
                 options=options,
                 value=default if default in options else options[0],
-
                 description=label,
                 style=self.common_style,
                 layout=self.common_layout
@@ -634,6 +752,10 @@ class AlgorithmWidget(widgets.VBox):
                     elif val_str == "None":
                          v_str = "None"
                     else:
+                        # For file paths on Windows, escape backslashes
+                        if arg_def and arg_def.get('widget') == 'file-selector':
+                            # Windows paths need double backslashes in Python strings
+                            val_str = val_str.replace('\\', '\\\\')
                         v_str = f"'{val_str}'"
                 
                 call_args.append(f"{name}={v_str}")

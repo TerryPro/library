@@ -11,7 +11,7 @@ def decomposition(df: pd.DataFrame, figsize: tuple = None) -> pd.DataFrame:
         name: STL 分解
         category: eda
         prompt: 请对{VAR_NAME} 执行 STL 分解 (Seasonal-Trend decomposition using LOESS)。将数据分解为趋势、季节与残差，并绘制分解结果图。
-        imports: import matplotlib.pyplot as plt, from statsmodels.tsa.seasonal import STL, import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame with DatetimeIndex.

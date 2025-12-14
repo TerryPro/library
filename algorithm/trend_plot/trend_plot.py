@@ -13,7 +13,7 @@ def trend_plot(df: pd.DataFrame, x_column: str = "", y_columns: list = None, plo
         name: 通用趋势图 (Trend)
         category: trend_plot
         prompt: 请根据配置绘制 {VAR_NAME} 的趋势图。支持自定义 X 轴、Y 轴列、标题、网格等设置。
-        imports: import matplotlib.pyplot as plt, import pandas as pd, import math, import numpy as np
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

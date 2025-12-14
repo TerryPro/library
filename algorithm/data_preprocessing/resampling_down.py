@@ -12,7 +12,7 @@ def resampling_down(df: pd.DataFrame, rule: str = "1小时", agg_method: str = "
         name: 降采样
         category: data_preprocessing
         prompt: 请对{VAR_NAME} 进行降采样聚合。使用 pandas 的 resample() 将数据聚合到更低的时间分辨率（例如 '1min' 或 '1H'）；数值列使用 mean()，状态列使用 last() 或 max()。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame with DatetimeIndex.

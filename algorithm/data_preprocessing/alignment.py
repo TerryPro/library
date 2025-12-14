@@ -12,7 +12,7 @@ def alignment(baseline_df: pd.DataFrame, other_df: pd.DataFrame) -> pd.DataFrame
         name: 多源数据对齐
         category: data_preprocessing
         prompt: 请以 {VAR_NAME} 为基准执行多源时间对齐。使用 pandas 的 merge_asof 方法，将其他数据对齐到该时间轴。
-        imports: import pandas as pd
+
     
     Parameters:
     baseline_df (pandas.DataFrame): Baseline DataFrame with DatetimeIndex.

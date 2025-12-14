@@ -13,7 +13,7 @@ def trend_ewma(df: pd.DataFrame, y_columns: list = None, span: int = 60, title: 
         name: 指数加权趋势
         category: trend_plot
         prompt: 请对{VAR_NAME} 绘制 EWMA（指数加权移动平均）趋势线。使用 pandas 的 ewm(span=...).mean() 计算趋势，并使用 matplotlib 将原始数据与 EWMA 趋势曲线叠加展示。
-        imports: import pandas as pd, import matplotlib.pyplot as plt
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

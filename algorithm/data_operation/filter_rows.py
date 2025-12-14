@@ -8,7 +8,7 @@ def filter_rows(df: pd.DataFrame, condition: str) -> pd.DataFrame:
         name: 筛选行
         category: data_operation
         prompt: 请对 {VAR_NAME} 进行行筛选。根据条件 {condition} 筛选数据（例如 'age > 18'）。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

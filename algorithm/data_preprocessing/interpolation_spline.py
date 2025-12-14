@@ -12,7 +12,7 @@ def interpolation_spline(df: pd.DataFrame, order: int = 3) -> pd.DataFrame:
         name: 样条插值
         category: data_preprocessing
         prompt: 请对{VAR_NAME} 进行样条插值 (Spline)。使用 pandas 的 interpolate(method='spline', order=3) 以获得更平滑的补全曲线。
-        imports: import pandas as pd, import numpy as np
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame.

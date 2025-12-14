@@ -11,7 +11,7 @@ def sampling_period(df: pd.DataFrame) -> pd.DataFrame:
         name: 采样周期统计
         category: eda
         prompt: 请对{VAR_NAME} 进行采样周期统计。计算每一列数据的实际采样周次。
-        imports: import pandas as pd
+
     
     Parameters:
     df (pandas.DataFrame): Input DataFrame with DatetimeIndex.
