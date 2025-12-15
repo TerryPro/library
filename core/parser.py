@@ -363,6 +363,64 @@ class CodeParser:
     def __init__(self):
         self.docstring_parser = DocstringParser()
     
+    def _clean_test_code(self, code: str) -> tuple[str, bool]:
+        """
+        智能清理测试调用代码，保留算法定义部分
+        
+        清理策略：
+        1. 保留所有 import 语句
+        2. 保留函数定义（包含 docstring）
+        3. 保留所有注释（单行 # 和多行 '''）
+        4. 移除函数定义之后的代码（测试调用、print等）
+        
+        Args:
+            code: 原始代码
+            
+        Returns:
+            (cleaned_code, has_test_code): 清理后的代码和是否包含测试代码的标记
+        """
+        import ast
+        
+        try:
+            tree = ast.parse(code)
+            lines = code.split('\n')
+            
+            # 找到函数定义节点
+            func_def = None
+            func_end_line = 0
+            
+            for node in tree.body:
+                if isinstance(node, ast.FunctionDef):
+                    func_def = node
+                    func_end_line = node.end_lineno
+                    break
+            
+            if not func_def:
+                # 没有函数定义，返回原代码
+                return code, False
+            
+            # 检测是否有测试代码（函数定义之后的非空行）
+            has_test_code = False
+            for i in range(func_end_line, len(lines)):
+                line = lines[i].strip()
+                if line and not line.startswith('#'):
+                    has_test_code = True
+                    break
+            
+            # 保留：从开头到函数定义结束的所有内容（包括注释）
+            cleaned_lines = lines[:func_end_line]
+            
+            # 移除末尾的空行
+            while cleaned_lines and not cleaned_lines[-1].strip():
+                cleaned_lines.pop()
+            
+            cleaned_code = '\n'.join(cleaned_lines)
+            return cleaned_code, has_test_code
+                
+        except SyntaxError:
+            # 解析失败，返回原代码
+            return code, False
+    
     def parse_function_code(self, code: str) -> Optional[Dict[str, Any]]:
         """
         从完整的函数代码中提取算法元数据
@@ -371,6 +429,7 @@ class CodeParser:
         - AST 解析（函数签名）
         - Docstring 解析（算法元数据、参数、返回值）
         - Import 提取（代码依赖）
+        - 智能清理测试调用代码
         
         Args:
             code: 完整的Python函数代码字符串
@@ -386,7 +445,8 @@ class CodeParser:
             - args: 参数列表（非input角色）
             - inputs: 输入端口列表（input角色）
             - outputs: 输出端口列表
-            - code: 原始代码
+            - code: 原始代码（已清理测试代码）
+            - has_test_code: 是否包含了测试调用代码
             
             如果解析失败返回 None
         """
@@ -394,8 +454,11 @@ class CodeParser:
         from .extractor import extract_imports_from_source
         
         try:
+            # 0. 智能清理测试代码
+            cleaned_code, has_test_code = self._clean_test_code(code)
+            
             # 1. 解析AST
-            tree = ast.parse(code)
+            tree = ast.parse(cleaned_code)
             func_node = None
             for node in tree.body:
                 if isinstance(node, ast.FunctionDef):
@@ -414,8 +477,8 @@ class CodeParser:
             algo_metadata = self.docstring_parser.parse_algorithm_section(docstring)
             params_meta = self.docstring_parser.parse_parameters_section(docstring)
             
-            # 4. 提取imports（从实际代码，而非docstring）
-            imports = extract_imports_from_source(code)
+            # 4. 提取imports（从清理后的代码，而非docstring）
+            imports = extract_imports_from_source(cleaned_code)
             
             # 5. 提取函数参数
             args = []
@@ -497,7 +560,8 @@ class CodeParser:
                 "args": args,
                 "inputs": inputs,
                 "outputs": outputs,
-                "code": code
+                "code": cleaned_code,
+                "has_test_code": has_test_code
             }
             
         except Exception as e:
