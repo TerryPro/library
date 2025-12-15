@@ -24,11 +24,12 @@ class CodeGenerator:
         """
         func_name = algo.get('id')
         
-        # Collect args
+        # 收集输入参数
         call_args = []
         
         for name, widget in param_widgets_map.items():
-            if name == '__output_var__':
+            # 跳过输出参数
+            if name.startswith('__') or name in [o.get('name') for o in algo.get('outputs', [])]:
                 continue
             
             val = widget.value
@@ -51,27 +52,60 @@ class CodeGenerator:
                 v_str = self._format_value(val, arg_def)
                 call_args.append(f"{name}={v_str}")
         
-        # Generate imports: use unified algorithm import
+        # 生成导入语句：使用统一的 algorithm 导入
         code = "from algorithm import *\n"
         code += f"# {algo.get('name')}\n\n"
         
-        # Output assignment
-        output_var = None
-        if '__output_var__' in param_widgets_map:
-            val = param_widgets_map['__output_var__'].value.strip()
-            if val:
-                output_var = val
-        
+        # 处理输出
+        output_vars = self._collect_output_vars(algo, param_widgets_map)
         call_expr = f"{func_name}({', '.join(call_args)})"
         
-        if output_var:
-            code += f"{output_var} = {call_expr}\n"
-            # Auto-display the output if it's assigned
-            code += f"{output_var}"
+        if output_vars:
+            if len(output_vars) == 1:
+                # 单个输出
+                code += f"{output_vars[0]} = {call_expr}\n"
+                # 自动显示输出
+                code += f"{output_vars[0]}"
+            else:
+                # 多个输出（元组解包）
+                code += f"{', '.join(output_vars)} = {call_expr}\n"
+                # 显示第一个输出
+                code += f"{output_vars[0]}"
         else:
+            # 无输出变量，直接调用
             code += call_expr
             
         return code
+    
+    def _collect_output_vars(self, algo, param_widgets_map):
+        """收集输出变量名
+        
+        Args:
+            algo: 算法元数据字典
+            param_widgets_map: 参数名到Widget的映射
+            
+        Returns:
+            list: 输出变量名列表，按 outputs 顺序
+        """
+        output_vars = []
+        outputs = algo.get('outputs', [])
+        
+        if outputs:
+            # 多输出模式：从 outputs 字段收集
+            for output in outputs:
+                output_name = output.get('name')
+                if output_name in param_widgets_map:
+                    widget = param_widgets_map[output_name]
+                    var_name = widget.value.strip()
+                    if var_name:
+                        output_vars.append(var_name)
+        elif '__single_output__' in param_widgets_map:
+            # 单输出模式（兼容旧版）
+            val = param_widgets_map['__single_output__'].value.strip()
+            if val:
+                output_vars.append(val)
+        
+        return output_vars
     
     def _format_value(self, val, arg_def):
         """格式化参数值为代码字符串

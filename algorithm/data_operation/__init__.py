@@ -6,3 +6,4 @@ from .merge_dfs import merge_dfs
 from .rename_columns import rename_columns
 from .rolling_window import rolling_window
 from .select_columns import select_columns
+from .split_train_test import split_train_test

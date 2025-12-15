@@ -1,11 +1,8 @@
-import os
-import sys
 import pandas as pd
 from typing import Optional
-from typing import Any
-from IPython.display import display
+import os
 
-def load_csv(filepath: str, timeIndex: str = 'timestamp') -> Optional[pd.DataFrame]:
+def load_csv(filepath: str = 'satellite_eps_telemetry.csv', timeIndex: str = 'timestamp') -> Optional[pd.DataFrame]:
     """
     从数据集目录中读取一个CSV文件，读取并返回pandas的dataframe数据。
     
@@ -28,7 +25,7 @@ def load_csv(filepath: str, timeIndex: str = 'timestamp') -> Optional[pd.DataFra
         role: parameter
     
     Returns:
-    df_out (pd.DataFrame): Result
+    df_out (pd.DataFrame): 从CSV文件读取数据后的df
     """
     if not os.path.exists(filepath):
         print(f"Error: File not found at {filepath}")

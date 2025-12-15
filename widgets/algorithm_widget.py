@@ -232,7 +232,7 @@ class AlgorithmWidget(widgets.VBox):
                 continue
             
             if role == 'output':
-                # Generally outputs are return values
+                # 输出参数在后面统一处理
                 continue
                 
             if role == 'parameter':
@@ -241,31 +241,15 @@ class AlgorithmWidget(widgets.VBox):
                     widgets_list.append(w)
                     self.param_widgets_map[name] = w
         
-        # Add output variable config if needed
-        self._add_output_widget(algo, widgets_list)
+        # 2. 使用新的输出配置方法
+        output_widgets, output_map = self.widget_builder.create_output_widgets(algo)
+        if output_widgets:
+            widgets_list.extend(output_widgets)
+            self.param_widgets_map.update(output_map)
         
         self.params_container.children = widgets_list
     
-    def _add_output_widget(self, algo, widgets_list):
-        """添加输出变量配置Widget"""
-        ret_config = algo.get('returns', {})
-        ret_type = ret_config.get('return', '').strip()
-        
-        # Only show output config if there is a return type and it's not "None"
-        if ret_type and ret_type.lower() != 'none':
-            # Default output name based on function name
-            default_out = f"res_{algo['id']}"
-            widgets_list.append(widgets.HTML("<b>输出配置:</b>"))
-            
-            w = widgets.Text(
-                value=default_out,
-                description='输出变量名:',
-                placeholder='输入变量名以接收结果',
-                style=self.common_style,
-                layout=self.common_layout
-            )
-            self.param_widgets_map['__output_var__'] = w
-            widgets_list.append(w)
+
 
     def generate_code(self):
         """生成算法调用代码

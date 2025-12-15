@@ -23,6 +23,70 @@ class WidgetBuilder:
         self.common_layout = common_layout or widgets.Layout(width='98%')
         self.data_provider = DataProvider()
     
+    def create_output_widgets(self, algo):
+        """创建输出参数配置Widget
+        
+        Args:
+            algo: 算法元数据字典
+            
+        Returns:
+            tuple: (widgets_list, output_widgets_map)
+                - widgets_list: 输出相关的Widget列表
+                - output_widgets_map: 输出名称到Widget的映射
+        """
+        widgets_list = []
+        output_widgets_map = {}
+        
+        # 检查算法是否有输出
+        outputs = algo.get('outputs', [])
+        ret_config = algo.get('returns', {})
+        ret_type = ret_config.get('return', '').strip() if ret_config else ''
+        
+        # 优先使用 outputs 字段（多输出支持）
+        if outputs:
+            widgets_list.append(widgets.HTML("<b>输出配置:</b>"))
+            for output in outputs:
+                output_name = output.get('name', 'output')
+                output_type = output.get('type', 'DataFrame')
+                output_desc = output.get('description', '')
+                
+                # 默认输出变量名
+                default_var = f"{output_name}"
+                
+                # 创建输出变量名输入框
+                w = widgets.Text(
+                    value=default_var,
+                    description=f'{output_name}:',
+                    placeholder=f'输出变量名 ({output_type})',
+                    style=self.common_style,
+                    layout=self.common_layout
+                )
+                widgets_list.append(w)
+                output_widgets_map[output_name] = w
+                
+                # 如果有描述，添加提示信息
+                if output_desc:
+                    widgets_list.append(widgets.HTML(
+                        f"<div style='margin-left: 20px; color: #666; font-size: 0.9em;'>{output_desc}</div>"
+                    ))
+        
+        # 如果没有 outputs 但有 return 类型，使用传统单输出模式
+        elif ret_type and ret_type.lower() != 'none':
+            widgets_list.append(widgets.HTML("<b>输出配置:</b>"))
+            default_out = f"res_{algo['id']}"
+            
+            w = widgets.Text(
+                value=default_out,
+                description='输出变量名:',
+                placeholder='输入变量名以接收结果',
+                style=self.common_style,
+                layout=self.common_layout
+            )
+            widgets_list.append(w)
+            output_widgets_map['__single_output__'] = w
+        
+        return widgets_list, output_widgets_map
+    
     def create_dataframe_selector(self, name, label):
         """创建DataFrame选择器
         
