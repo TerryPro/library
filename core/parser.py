@@ -164,9 +164,13 @@ class DocstringParser:
             if stripped_line.startswith('Parameters:'):
                 in_params_section = True
                 continue
-            if stripped_line.startswith('Returns:') or \
-               stripped_line.startswith('Example:') or \
-               stripped_line.startswith('Algorithm:'):
+            
+            # 只有在已经进入 Parameters 区域后，遇到其他区域才退出
+            if in_params_section and (
+                stripped_line.startswith('Returns:') or 
+                stripped_line.startswith('Example:') or 
+                stripped_line.startswith('Algorithm:')
+            ):
                 in_params_section = False
                 break
             
