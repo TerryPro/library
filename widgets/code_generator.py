@@ -32,7 +32,21 @@ class CodeGenerator:
             if name.startswith('__') or name in [o.get('name') for o in algo.get('outputs', [])]:
                 continue
             
-            val = widget.value
+            # 处理自定义多选控件（VBox 包含 checkboxes）
+            if isinstance(widget, widgets.VBox) and hasattr(widget, '_checkboxes'):
+                # 从 checkboxes 中读取选中的列
+                selected = [cb.description for cb in widget._checkboxes if cb.value]
+                val = tuple(selected) if selected else ()  # 转为元组
+            # 处理 HBox 容器（旧版多选列选择器）
+            elif isinstance(widget, widgets.HBox):
+                # HBox 的第二个子控件是 SelectMultiple
+                val = widget.children[1].value
+            else:
+                val = widget.value
+            
+            # 如果值为 None 或空元组，跳过该参数（不传递）
+            if val is None or (isinstance(val, (tuple, list)) and len(val) == 0):
+                continue
             
             # Find arg config to check type
             arg_def = next((a for a in args_config if a['name'] == name), None)
@@ -117,6 +131,12 @@ class CodeGenerator:
         Returns:
             str: 格式化后的参数值字符串
         """
+        # 处理 SelectMultiple 控件返回的元组/列表
+        if isinstance(val, (tuple, list)):
+            # 将元组/列表转换为 Python 列表字面量
+            formatted_items = [f"'{item}'" if isinstance(item, str) else str(item) for item in val]
+            return f"[{', '.join(formatted_items)}]"
+        
         if isinstance(val, bool):
             return "True" if val else "False"
         elif isinstance(val, (int, float)):

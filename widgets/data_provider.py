@@ -32,6 +32,32 @@ class DataProvider:
         return sorted(dfs)
     
     @staticmethod
+    def get_all_dataframe_columns():
+        """获取所有 DataFrame 的列名集合
+        
+        从当前 Notebook 环境中获取所有 DataFrame 变量的列名，
+        去重后按字母顺序返回。
+        
+        Returns:
+            list: 所有 DataFrame 的列名列表（已去重、排序）
+        """
+        ip = get_ipython()
+        if not ip:
+            return []
+        
+        columns_set = set()
+        user_ns = ip.user_ns
+        
+        # 遍历所有 DataFrame 变量
+        for name, var in user_ns.items():
+            if not name.startswith('_') and isinstance(var, pd.DataFrame):
+                # 添加该 DataFrame 的所有列名
+                columns_set.update(var.columns.tolist())
+        
+        # 转换为列表并排序
+        return sorted(list(columns_set))
+    
+    @staticmethod
     def get_dataset_csv_files():
         """Get all CSV files from the dataset directory
         
