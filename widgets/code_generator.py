@@ -32,17 +32,19 @@ class CodeGenerator:
             if name.startswith('__') or name in [o.get('name') for o in algo.get('outputs', [])]:
                 continue
             
+            # 处理网格布局包装的控件（HBox）
+            actual_widget = widget
+            if isinstance(widget, widgets.HBox) and len(widget.children) == 2:
+                # 网格布局的 HBox，第二个子元素是实际控件
+                actual_widget = widget.children[1]
+            
             # 处理自定义多选控件（VBox 包含 checkboxes）
-            if isinstance(widget, widgets.VBox) and hasattr(widget, '_checkboxes'):
+            if isinstance(actual_widget, widgets.VBox) and hasattr(actual_widget, '_checkboxes'):
                 # 从 checkboxes 中读取选中的列
-                selected = [cb.description for cb in widget._checkboxes if cb.value]
+                selected = [cb.description for cb in actual_widget._checkboxes if cb.value]
                 val = tuple(selected) if selected else ()  # 转为元组
-            # 处理 HBox 容器（旧版多选列选择器）
-            elif isinstance(widget, widgets.HBox):
-                # HBox 的第二个子控件是 SelectMultiple
-                val = widget.children[1].value
             else:
-                val = widget.value
+                val = actual_widget.value
             
             # 如果值为 None 或空元组，跳过该参数（不传递）
             if val is None or (isinstance(val, (tuple, list)) and len(val) == 0):
@@ -53,7 +55,7 @@ class CodeGenerator:
             
             is_df = False
             # Check if it was created as dataframe selector
-            if isinstance(widget, widgets.Dropdown) and 'df' in name.lower() and arg_def is None:
+            if isinstance(actual_widget, widgets.Dropdown) and 'df' in name.lower() and arg_def is None:
                 # Heuristic for inputs from 'inputs' array which don't have arg def
                 is_df = True
             elif arg_def and arg_def.get('role') == 'input':

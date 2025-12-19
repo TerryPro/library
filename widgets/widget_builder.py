@@ -12,16 +12,49 @@ from .data_provider import DataProvider
 class WidgetBuilder:
     """Widget构建器，负责根据参数配置创建对应的ipywidgets控件"""
     
-    def __init__(self, common_style=None, common_layout=None):
+    def __init__(self, common_style=None, common_layout=None, use_grid_layout=True):
         """初始化Widget构建器
         
         Args:
             common_style: 通用样式配置
             common_layout: 通用布局配置
+            use_grid_layout: 是否使用网格布局（默认 True）
         """
         self.common_style = common_style or {'description_width': '100px'}
         self.common_layout = common_layout or widgets.Layout(width='98%')
         self.data_provider = DataProvider()
+        self.use_grid_layout = use_grid_layout
+        self.label_width = '100px'  # 标签宽度，与 description_width 一致
+    
+    def _wrap_with_grid(self, label, widget):
+        """将控件包装为网格布局
+        
+        使用 HBox 将标签和控件并排，实现网格对齐。
+        
+        Args:
+            label: 标签文本
+            widget: 控件实例
+            
+        Returns:
+            widgets.HBox: 包装后的控件
+        """
+        # 创建标签
+        label_widget = widgets.HTML(
+            value=f'<div style="text-align: right; padding-right: 5px;">{label}:</div>',
+            layout=widgets.Layout(width=self.label_width, height='28px')
+        )
+        
+        # 修改控件布局，移除 description，设置 flex
+        widget.description = ''  # 移除原有 description
+        if hasattr(widget, 'layout'):
+            widget.layout.width = 'auto'
+            widget.layout.flex = '1'
+        
+        # 使用 HBox 并排
+        return widgets.HBox(
+            [label_widget, widget],
+            layout=self.common_layout
+        )
     
     def create_output_widgets(self, algo):
         """创建输出参数配置Widget
@@ -56,18 +89,29 @@ class WidgetBuilder:
                 # 创建输出变量名输入框
                 w = widgets.Text(
                     value=default_var,
-                    description=f'{output_name}:',
+                    description=f'{output_name}:' if not self.use_grid_layout else '',
                     placeholder=f'输出变量名 ({output_type})',
-                    style=self.common_style,
-                    layout=self.common_layout
+                    style=self.common_style if not self.use_grid_layout else {},
+                    layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
                 )
+                
+                # 如果使用网格布局，包装控件
+                if self.use_grid_layout:
+                    w = self._wrap_with_grid(f'{output_name}', w)
+                
                 widgets_list.append(w)
-                output_widgets_map[output_name] = w
+                
+                # 存储到 map 时需要处理 HBox 的情况
+                if self.use_grid_layout:
+                    # 从 HBox 中提取实际的 Text widget（第二个子元素）
+                    output_widgets_map[output_name] = w.children[1]
+                else:
+                    output_widgets_map[output_name] = w
                 
                 # 如果有描述，添加提示信息
                 if output_desc:
                     widgets_list.append(widgets.HTML(
-                        f"<div style='margin-left: 20px; color: #666; font-size: 0.9em;'>{output_desc}</div>"
+                        f"<div style='margin-left: {120 if self.use_grid_layout else 20}px; color: #666; font-size: 0.9em;'>{output_desc}</div>"
                     ))
         
         # 如果没有 outputs 但有 return 类型，使用传统单输出模式
@@ -77,13 +121,23 @@ class WidgetBuilder:
             
             w = widgets.Text(
                 value=default_out,
-                description='输出变量名:',
+                description='输出变量名:' if not self.use_grid_layout else '',
                 placeholder='输入变量名以接收结果',
-                style=self.common_style,
-                layout=self.common_layout
+                style=self.common_style if not self.use_grid_layout else {},
+                layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
             )
+            
+            # 如果使用网格布局，包装控件
+            if self.use_grid_layout:
+                w = self._wrap_with_grid('输出变量名', w)
+            
             widgets_list.append(w)
-            output_widgets_map['__single_output__'] = w
+            
+            # 存储到 map 时需要处理 HBox 的情况
+            if self.use_grid_layout:
+                output_widgets_map['__single_output__'] = w.children[1]
+            else:
+                output_widgets_map['__single_output__'] = w
         
         return widgets_list, output_widgets_map
     
@@ -95,30 +149,36 @@ class WidgetBuilder:
             label: 显示标签
                 
         Returns:
-            widgets.Dropdown: DataFrame 下拉选择框
+            widgets.Dropdown: DataFrame 下拉选择框（如果启用网格布局则返回 HBox）
         """
         dfs = self.data_provider.get_dataframe_variables()
-            
+        
+        # 合并 label 和 name
+        full_label = f'{label} ({name})'
+        
         # 如果没有可用的 DataFrame，创建一个空的下拉框并禁用
         if not dfs:
-            dropdown = widgets.Dropdown(
+            widget = widgets.Dropdown(
                 options=[('-- 无可用 DataFrame --', None)],
                 value=None,
-                description=f'{label} ({name}):',
-                style=self.common_style,
-                layout=self.common_layout,
+                description=full_label if not self.use_grid_layout else '',
+                style=self.common_style if not self.use_grid_layout else {},
+                layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1'),
                 disabled=True  # 禁用控件
             )
-            return dropdown
-            
-        # 有可用 DataFrame 时，选择第一个作为默认值
-        return widgets.Dropdown(
-            options=dfs,
-            value=dfs[0] if dfs else None,
-            description=f'{label} ({name}):',
-            style=self.common_style,
-            layout=self.common_layout
-        )
+        else:
+            # 有可用 DataFrame 时，选择第一个作为默认值
+            widget = widgets.Dropdown(
+                options=dfs,
+                value=dfs[0] if dfs else None,
+                description=full_label if not self.use_grid_layout else '',
+                style=self.common_style if not self.use_grid_layout else {},
+                layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
+            )
+        
+        if self.use_grid_layout:
+            return self._wrap_with_grid(full_label, widget)
+        return widget
     
     def create_parameter_widget(self, arg):
         """根据参数配置创建对应的Widget
@@ -178,21 +238,25 @@ class WidgetBuilder:
                         default_value = abs_path
                         break
             
-            return widgets.Dropdown(
+            widget = widgets.Dropdown(
                 options=csv_files,
                 value=default_value,
-                description=label,
-                style=self.common_style,
-                layout=self.common_layout
+                description=label if not self.use_grid_layout else '',
+                style=self.common_style if not self.use_grid_layout else {},
+                layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
             )
         else:
             # Fallback to text input if no files found
-            return widgets.Text(
+            widget = widgets.Text(
                 value=str(default) if default is not None else '',
-                description=label,
-                style=self.common_style,
-                layout=self.common_layout
+                description=label if not self.use_grid_layout else '',
+                style=self.common_style if not self.use_grid_layout else {},
+                layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
             )
+        
+        if self.use_grid_layout:
+            return self._wrap_with_grid(label, widget)
+        return widget
     
     def _create_column_selector(self, label, default):
         """创建列名选择器（单选）
@@ -205,7 +269,7 @@ class WidgetBuilder:
             default: 默认值
             
         Returns:
-            widgets.Dropdown 或 widgets.Text
+            widgets.Dropdown 或 widgets.Text（如果启用网格布局则返回 HBox）
         """
         # 获取所有可用的 DataFrame 列名
         columns = self.data_provider.get_all_dataframe_columns()
@@ -224,22 +288,27 @@ class WidgetBuilder:
                 # 默认选择第一个列
                 default_value = columns[0] if columns else None
             
-            return widgets.Dropdown(
+            widget = widgets.Dropdown(
                 options=options,
                 value=default_value,
-                description=label,
-                style=self.common_style,
-                layout=self.common_layout
+                description=label if not self.use_grid_layout else '',
+                style=self.common_style if not self.use_grid_layout else {},
+                layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
             )
         else:
             # 退化为文本输入框
-            return widgets.Text(
+            widget = widgets.Text(
                 value=str(default) if default is not None else '',
-                description=label,
+                description=label if not self.use_grid_layout else '',
                 placeholder='请输入列名',
-                style=self.common_style,
-                layout=self.common_layout
+                style=self.common_style if not self.use_grid_layout else {},
+                layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
             )
+        
+        # 如果启用网格布局，包装控件
+        if self.use_grid_layout:
+            return self._wrap_with_grid(label, widget)
+        return widget
     
     def _create_multi_column_selector(self, label, default):
         """创建多选列选择器
@@ -268,27 +337,58 @@ class WidgetBuilder:
                 elif isinstance(default, str) and default in columns:
                     default_value = [default]
             
-            # Text 控件显示已选择的列
-            text_widget = widgets.Text(
-                value=str(default_value),
-                description=label,
-                placeholder='[]',
-                disabled=True,
-                style=self.common_style,
+            # 标签（与 common_style 的 description_width 一致）
+            label_widget = widgets.HTML(
+                value=f'<div style="text-align: right; padding-right: 5px;">{label}:</div>',
                 layout=widgets.Layout(
-                    width='auto',  # 自适应宽度
-                    flex='1'  # 占据剩余空间
+                    width=self.label_width,  # 使用统一的标签宽度
+                    min_width=self.label_width,
+                    max_width=self.label_width,
+                    height='28px',
+                    flex='0 0 auto'  # 不伸缩，固定大小
                 )
             )
             
-            # 下拉按钮（固定宽度，与上方 Dropdown 宽度一致）
+            # Text 控件显示已选择的列
+            text_widget = widgets.Text(
+                value=', '.join(default_value),
+                placeholder='',
+                disabled=True,
+                layout=widgets.Layout(
+                    flex='1',  # 自动填充剩余空间
+                    min_width='0'  # 允许压缩
+                )
+            )
+            
+            # 下拉按钮（使用图标，宽度缩小）
             dropdown_button = widgets.Button(
-                description='▼',  # 下箭头符号
+                icon='caret-down',
                 button_style='',
                 tooltip='点击选择列',
                 layout=widgets.Layout(
-                    width='60px',  # 固定宽度，与 Dropdown 的下拉箭头宽度类似
-                    height='28px'
+                    width='32px',  # 缩小宽度
+                    min_width='32px',
+                    max_width='32px',
+                    height='28px',
+                    flex='0 0 auto'  # 不伸缩，固定大小
+                )
+            )
+            
+            # 输入区域：Text + Button 组合（占据其余控件输入框的宽度）
+            input_area = widgets.HBox(
+                [text_widget, dropdown_button],
+                layout=widgets.Layout(
+                    width = '100%',
+                    min_width='0'
+                )
+            )
+            
+            # 第一行：标签 + 输入区域（使用 HBox）
+            first_row = widgets.HBox(
+                [label_widget, input_area],
+                layout=widgets.Layout(
+                    width=self.common_layout.width,  # 使用统一的 98% 宽度
+                    align_items='stretch'  # 垂直对齐
                 )
             )
             
@@ -299,59 +399,76 @@ class WidgetBuilder:
                     value=(col in default_value),
                     description=col,
                     indent=False,
-                    layout=widgets.Layout(width='80%', height='25px')
+                    layout=widgets.Layout(
+                        width='auto',  # 自动宽度
+                        height='25px'
+                    )
                 )
                 checkboxes.append(cb)
             
+            # 空占位符（与标签同宽）
+            spacer = widgets.HTML(
+                value='',
+                layout=widgets.Layout(
+                    width=self.label_width,  # 使用统一的标签宽度
+                    min_width=self.label_width,
+                    max_width=self.label_width,
+                    flex='0 0 auto'  # 不伸缩，固定大小
+                )
+            )
+            
             # 复选框容器（可滚动）
-            # 宽度与第一行一致，从 Text 左边到 Button 右边
-            # 需要添加左边距，与 Text 输入框对齐（跳过 description 标签宽度）
-            # description_width(100px) + 间隙(~10px) = 约 110px
             checkbox_container = widgets.VBox(
                 checkboxes,
                 layout=widgets.Layout(
-                    width='calc(100% - 110px)',  # 减去 description 标签宽度 + 间隙
+                    width='auto',
+                    flex='1',  # 自动填充剩余空间
+                    min_width='0',  # 允许压缩
                     max_height='150px',
                     overflow_y='auto',
                     border='1px solid #ccc',
                     padding='5px',
-                    margin='0 0 0 110px',  # 左边距，与 Text 输入框左对齐
                     display='none'  # 初始隐藏
+                )
+            )
+            
+            # 第二行：空占位符 + 复选框容器
+            second_row = widgets.HBox(
+                [spacer, checkbox_container],
+                layout=widgets.Layout(
+                    width=self.common_layout.width,  # 使用统一的 98% 宽度
+                    display='none',  # 初始隐藏
+                    align_items='stretch'  # 垂直对齐
                 )
             )
             
             # 按钮点击事件：切换显示/隐藏
             def toggle_dropdown(b):
-                if checkbox_container.layout.display == 'none':
+                if second_row.layout.display == 'none':
+                    second_row.layout.display = 'flex'
                     checkbox_container.layout.display = 'block'
-                    dropdown_button.description = '▲'  # 上箭头
+                    dropdown_button.icon = 'caret-up'
                 else:
+                    second_row.layout.display = 'none'
                     checkbox_container.layout.display = 'none'
-                    dropdown_button.description = '▼'  # 下箭头
+                    dropdown_button.icon = 'caret-down'
             
             dropdown_button.on_click(toggle_dropdown)
             
             # 复选框变化事件：更新 Text 显示
             def on_checkbox_change(change):
                 selected = [cb.description for cb in checkboxes if cb.value]
-                text_widget.value = str(selected)
+                text_widget.value = ', '.join(selected)
             
             for cb in checkboxes:
                 cb.observe(on_checkbox_change, names='value')
             
-            # 第一行：Text + Button（使用 flex 布局）
-            first_row = widgets.HBox(
-                [text_widget, dropdown_button],
-                layout=widgets.Layout(
-                    width='98%',
-                    justify_content='space-between'  # 两端对齐
-                )
-            )
-            
-            # 整体容器：第一行 + 复选框列表
+            # 整体容器：第一行 + 第二行
             container = widgets.VBox(
-                [first_row, checkbox_container],
-                layout=widgets.Layout(width='98%')
+                [first_row, second_row],
+                layout=widgets.Layout(
+                    width=self.common_layout.width  # 使用统一的 98% 宽度
+                )
             )
             
             # 存储 checkboxes 列表，便于代码生成时读取
@@ -361,67 +478,84 @@ class WidgetBuilder:
         else:
             # 退化为文本输入框（逗号分隔）
             default_str = ','.join(default) if isinstance(default, list) else str(default) if default else ''
-            return widgets.Text(
+            widget = widgets.Text(
                 value=default_str,
-                description=label,
+                description=label if not self.use_grid_layout else '',
                 placeholder='请输入列名，用逗号分隔',
-                style=self.common_style,
-                layout=self.common_layout
+                style=self.common_style if not self.use_grid_layout else {},
+                layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
             )
+            
+            if self.use_grid_layout:
+                return self._wrap_with_grid(label, widget)
+            return widget
     
     def _create_dropdown_widget(self, label, default, options):
-        """创建下拉选择Widget
-        
-        用于 select 控件，不添加 "-- 不选择 --" 选项，
-        用户必须选择一个有效值。
-        """
-        # 设置默认值
+        """创建下拉选择Widget"""
         if default is not None and default in options:
             default_value = default
         else:
-            # 选择第一个选项作为默认值
             default_value = options[0] if options else None
         
-        return widgets.Dropdown(
+        widget = widgets.Dropdown(
             options=options,
             value=default_value,
-            description=label,
-            style=self.common_style,
-            layout=self.common_layout
+            description=label if not self.use_grid_layout else '',
+            style=self.common_style if not self.use_grid_layout else {},
+            layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
         )
+        
+        if self.use_grid_layout:
+            return self._wrap_with_grid(label, widget)
+        return widget
     
     def _create_checkbox_widget(self, label, default):
         """创建复选框Widget"""
-        return widgets.Checkbox(
-            value=bool(default),
-            description=label,
-            style=self.common_style,
-            layout=self.common_layout
+        widget = widgets.Checkbox(
+            value=bool(default) if default is not None else False,
+            description=label if not self.use_grid_layout else '',
+            layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
         )
+        
+        if self.use_grid_layout:
+            return self._wrap_with_grid(label, widget)
+        return widget
     
     def _create_int_widget(self, label, default):
         """创建整数输入Widget"""
-        return widgets.IntText(
+        widget = widgets.IntText(
             value=int(default) if default is not None else 0,
-            description=label,
-            style=self.common_style,
-            layout=self.common_layout
+            description=label if not self.use_grid_layout else '',
+            style=self.common_style if not self.use_grid_layout else {},
+            layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
         )
+        
+        if self.use_grid_layout:
+            return self._wrap_with_grid(label, widget)
+        return widget
     
     def _create_float_widget(self, label, default):
         """创建浮点数输入Widget"""
-        return widgets.FloatText(
+        widget = widgets.FloatText(
             value=float(default) if default is not None else 0.0,
-            description=label,
-            style=self.common_style,
-            layout=self.common_layout
+            description=label if not self.use_grid_layout else '',
+            style=self.common_style if not self.use_grid_layout else {},
+            layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
         )
+        
+        if self.use_grid_layout:
+            return self._wrap_with_grid(label, widget)
+        return widget
     
     def _create_text_widget(self, label, default):
         """创建文本输入Widget"""
-        return widgets.Text(
+        widget = widgets.Text(
             value=str(default) if default is not None else '',
-            description=label,
-            style=self.common_style,
-            layout=self.common_layout
+            description=label if not self.use_grid_layout else '',
+            style=self.common_style if not self.use_grid_layout else {},
+            layout=self.common_layout if not self.use_grid_layout else widgets.Layout(width='auto', flex='1')
         )
+        
+        if self.use_grid_layout:
+            return self._wrap_with_grid(label, widget)
+        return widget
