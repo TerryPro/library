@@ -20,7 +20,8 @@ class AlgorithmPort:
         """转换为前端格式（保持兼容性）"""
         return {
             "name": self.name,
-            "type": self.type
+            "type": self.type,
+            "description": self.description  # 添加description字段
         }
 
 

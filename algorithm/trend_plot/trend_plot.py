@@ -5,47 +5,59 @@ import statsmodels.api as sm
 from statsmodels.tsa.seasonal import STL
 import mplfinance.original_flavor as mpf
 
-def trend_plot(df: pd.DataFrame, x_column: str = "", y_columns: list = None, plot_type: str = "叠加显示", title: str = "趋势图", xlabel: str = "", ylabel: str = "", grid: bool = True, figsize: tuple = None) -> None:
+def trend_plot(df: pd.DataFrame, x_column: str = '', y_columns: list = [], xlabel: str = '', ylabel: str = '', figsize: tuple = None, plot_type: str = '叠加显示', title: str = '趋势图', grid: bool = True) -> None:
     """
     Plot trend chart for a DataFrame.
-
+No
     Algorithm:
         name: 通用趋势图 (Trend)
         category: trend_plot
         prompt: 请根据配置绘制 {VAR_NAME} 的趋势图。支持自定义 X 轴、Y 轴列、标题、网格等设置。
-
     
     Parameters:
-    df (pandas.DataFrame): Input DataFrame.
+    df (pd.DataFrame): Input DataFrame
         role: input
     x_column (str): Column to use as X-axis.
         label: X轴列名
         widget: column-selector
         priority: critical
+        role: parameter
     y_columns (list): Columns to plot on Y-axis.
         label: Y轴列名
         widget: column-selector
         priority: critical
+        role: parameter
     plot_type (str): Plot type (叠加显示, 堆叠显示, 分栏显示, 网格显示).
         label: 绘图方式
         widget: select
         options: ["叠加显示", "堆叠显示", "分栏显示", "网格显示"]
         priority: critical
+        role: parameter
     title (str): Chart title.
         label: 图表标题
+        widget: input-text
         priority: non-critical
+        role: parameter
     xlabel (str): X-axis label.
         label: X轴标签
+        widget: input-text
         priority: non-critical
+        role: parameter
     ylabel (str): Y-axis label.
         label: Y轴标签
+        widget: input-text
         priority: non-critical
+        role: parameter
     grid (bool): Whether to show grid.
         label: 显示网格
+        widget: select
         priority: non-critical
+        role: parameter
     figsize (tuple): Figure size tuple.
         label: 图像尺寸
+        widget: input-text
         priority: non-critical
+        role: parameter
     
     Returns:
     None

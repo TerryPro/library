@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from typing import Optional
 
-# 增加更多统计指标
 def calculate_basic_statistics(df: pd.DataFrame) -> Optional[pd.DataFrame]:
     """
     计算卫星电源遥测参数的基本统计量。
@@ -17,7 +16,7 @@ def calculate_basic_statistics(df: pd.DataFrame) -> Optional[pd.DataFrame]:
         role: input
     
     Returns:
-    stats_df (pd.DataFrame): 统计结果数据表，包含每个参数的max、min、mode、mean、variance、median.
+    stats_df (pd.DataFrame): 统计结果数据表
     """
     # 定义要分析的数值列，排除'timestamp'和'system_status'
     numeric_columns = [

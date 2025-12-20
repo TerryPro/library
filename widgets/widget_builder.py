@@ -210,6 +210,8 @@ class WidgetBuilder:
         elif w_type == 'file-selector':
             widget = self._create_file_selector_widget(label, default)
         elif w_type == 'select' or options:
+            if p_type == 'bool' and not options:
+                options = [True, False]
             widget = self._create_dropdown_widget(label, default, options)
         elif p_type == 'bool' or w_type == 'checkbox':
             widget = self._create_checkbox_widget(label, default)

@@ -46,12 +46,15 @@ class CodeGenerator:
             else:
                 val = actual_widget.value
             
-            # 如果值为 None 或空元组，跳过该参数（不传递）
-            if val is None or (isinstance(val, (tuple, list)) and len(val) == 0):
-                continue
-            
             # Find arg config to check type
             arg_def = next((a for a in args_config if a['name'] == name), None)
+
+            # 如果值为 None 或空元组，跳过该参数（不传递）
+            if val is None or (isinstance(val, (tuple, list)) and len(val) == 0):
+                # 对于 column-selector，如果是 None 或空，显式传递 None
+                if arg_def and arg_def.get('widget') == 'column-selector':
+                    call_args.append(f"{name}=None")
+                continue
             
             is_df = False
             # Check if it was created as dataframe selector

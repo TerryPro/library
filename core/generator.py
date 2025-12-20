@@ -25,7 +25,8 @@ class CodeGenerator:
     def generate_function_code(
         self, 
         metadata: AlgorithmMetadata,
-        existing_body: str = None
+        existing_body: str = None,
+        existing_code: str = None
     ) -> str:
         """
         根据元数据生成完整的算法函数代码
@@ -33,11 +34,19 @@ class CodeGenerator:
         Args:
             metadata: 算法元数据
             existing_body: 保留的现有函数体
+            existing_code: 完整的原始代码(用于提取imports)
             
         Returns:
             完整的Python函数代码
         """
-        # 处理imports
+        # 处理imports - 如果有原始代码,先提取原有imports以保留它们
+        if existing_code:
+            existing_imports = self.extractor.extract_imports(existing_code)
+            # 合并原有imports和metadata中的imports,去重
+            all_imports = list(dict.fromkeys(existing_imports + list(metadata.imports)))
+            # 更新metadata中的imports
+            metadata.imports = all_imports
+        
         imports = self._process_imports(metadata)
         imports_str = "\n".join(imports)
         
@@ -314,9 +323,9 @@ def {metadata.id}({sig_str}) {ret_annotation}:
 _generator = CodeGenerator()
 
 
-def generate_function_code(metadata: AlgorithmMetadata, existing_body: str = None) -> str:
+def generate_function_code(metadata: AlgorithmMetadata, existing_body: str = None, existing_code: str = None) -> str:
     """生成函数代码（便捷函数）"""
-    return _generator.generate_function_code(metadata, existing_body)
+    return _generator.generate_function_code(metadata, existing_body, existing_code)
 
 
 def generate_call_code(
