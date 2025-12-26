@@ -1,4 +1,5 @@
 from .plot_grouped_time_series import plot_grouped_time_series
+from .trend_dynamic import trend_dynamic
 from .trend_envelope import trend_envelope
 from .trend_ewma import trend_ewma
 from .trend_loess import trend_loess
