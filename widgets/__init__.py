@@ -13,6 +13,6 @@ Notebook端的算法选择和执行Widget组件
 """
 
 from .algorithm_widget import AlgorithmWidget
-from .dynamic_trend_widget import DynamicTrendWidget
+from .dynamic_trend_widget.main import DynamicTrendWidget
 
 __all__ = ['AlgorithmWidget', 'DynamicTrendWidget']

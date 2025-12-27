@@ -1,6 +1,6 @@
 import pandas as pd
 from IPython.display import display
-from widgets.dynamic_trend_widget import DynamicTrendWidget
+from widgets.dynamic_trend_widget.main import DynamicTrendWidget
 
 def trend_dynamic(df: pd.DataFrame, x_column: str = None, y_columns: list = None, title: str = '动态趋势分析', figsize: tuple = (16, 8)) -> None:
     """
