@@ -61,8 +61,26 @@ class UIComponents:
         self.y_param_table = VBox(layout=Layout(width='280px'))
         self.y_axis_table = VBox(layout=Layout(width='280px'))
 
-        # 图表容器
-        self.fig_container = widgets.Box([], layout=Layout(width='100%', height='600px', min_width='0', overflow='hidden'))
+        # 图表容器（允许在内容超出时滚动）
+        self.fig_container = widgets.Box([], layout=Layout(width='100%', height='600px', min_width='0', overflow='auto', border='1px solid #ddd'))
+
+        # 自定义顶部工具栏（替代 plotly 的 modebar）
+        self.toolbar_reset = widgets.Button(description='重置', icon='arrows-rotate', layout=Layout(width='110px'))
+        self.toolbar_zoom = widgets.Button(description='缩放', icon='search', layout=Layout(width='80px'))
+        self.toolbar_pan = widgets.Button(description='平移', icon='arrows', layout=Layout(width='80px'))
+        # 新增按钮：切换 Y 轴尺度（线性 / 对数）
+        self.toolbar_toggle_yscale = widgets.Button(description='Y轴尺度', icon='chart-line', layout=Layout(width='100px'))
+        # 新增按钮：切换图例显示/隐藏
+        self.toolbar_toggle_legend = widgets.Button(description='切换图例', icon='list', layout=Layout(width='100px'))
+        # 新增按钮：显示/隐藏范围滑条（Range Slider）
+        self.toolbar_toggle_rangeslider = widgets.Button(description='范围滑条', icon='arrows-alt-h', layout=Layout(width='100px'))
+        self.toolbar_save = widgets.Button(description='PNG', icon='camera', layout=Layout(width='100px'))
+        self.toolbar = HBox(
+            [self.toolbar_reset, self.toolbar_zoom, self.toolbar_pan,
+             self.toolbar_toggle_yscale, self.toolbar_toggle_legend, self.toolbar_toggle_rangeslider,
+             self.toolbar_save],
+            layout=Layout(width='100%', padding='6px 0', align_items='center', justify_content='flex-start')
+        )
 
         # 主布局容器
         self.main_layout = None
@@ -91,7 +109,7 @@ class UIComponents:
             self.y_param_table
         ])
 
-        self.left_panel = VBox(left_panel_children, layout=Layout(width='300px', padding='6px', border='none'))
+        self.left_panel = VBox(left_panel_children, layout=Layout(width='300px', padding='6px', border='1px solid #ddd'))
 
         # 右侧图表占位
         placeholder = widgets.HTML("<div style='color:gray;padding:20px;'>请在左侧选择X轴和至少一个Y轴参数以显示图表</div>")
@@ -109,8 +127,8 @@ class UIComponents:
                 min_height='400px'
             )
         )
-
-        return self.main_layout
+        # 在参数选择界面也显示顶部工具栏，保持与主界面一致
+        return VBox([self.toolbar, self.main_layout], layout=Layout(width='100%'))
 
     def create_main_ui(self) -> VBox:
         """创建主UI界面"""
@@ -135,7 +153,7 @@ class UIComponents:
 
         self.left_panel = VBox(left_panel_children, layout=Layout(width='300px', padding='10px', border='1px solid #ddd'))
 
-        # 主布局
+        # 主布局（左侧参数 + 右侧图表）
         self.main_layout = GridBox(
             children=[self.left_panel, self.fig_container],
             layout=Layout(
@@ -148,7 +166,8 @@ class UIComponents:
             )
         )
 
-        return self.main_layout
+        # 顶部放置自定义工具栏，然后是主布局
+        return VBox([self.toolbar, self.main_layout], layout=Layout(width='100%'))
 
     def _refresh_param_selection_table(self):
         """刷新参数选择表格"""

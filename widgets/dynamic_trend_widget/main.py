@@ -55,6 +55,8 @@ class DynamicTrendWidget(VBox):
         self._pending_smooth: Dict[str, Dict] = {}
 
         # 初始化UI组件的事件监听
+        # toolbar 绑定标识（避免重复绑定）
+        self._toolbar_bound = False
         self._setup_event_handlers()
 
         # 初始化UI
@@ -80,6 +82,11 @@ class DynamicTrendWidget(VBox):
         # X轴选择器（如果存在）
         if self.ui_components.x_selector:
             self.ui_components.x_selector.observe(self._on_x_axis_change, names='value')
+        # 绑定 toolbar 的点击事件（一次性绑定）
+        try:
+            self._bind_toolbar_actions()
+        except Exception:
+            pass
 
     def _init_series_state(self):
         """根据y_columns初始化系列状态"""
@@ -96,7 +103,168 @@ class DynamicTrendWidget(VBox):
 
     def _init_figure(self):
         """初始化图表对象"""
-        self.ui_components.fig_container.children = [self.chart_renderer.create_figure_widget()]
+        fig = self.chart_renderer.create_figure_widget()
+        self.ui_components.fig_container.children = [fig]
+        # 不在此处绑定 toolbar，绑定已在事件初始化时完成（绑定的是按需获取当前 fig 的 handler）
+        # 保留 _wire_toolbar 作历史兼容，但不主动调用它以避免重复绑定
+
+    def _wire_toolbar(self, fig):
+        """将自定义工具栏按钮绑定到 FigureWidget 的操作（重置、缩放、平移、导出）"""
+        ui = self.ui_components
+
+        # 重置视图
+        def on_reset(btn):
+            try:
+                fig.update_xaxes(autorange=True)
+                fig.update_yaxes(autorange=True)
+            except Exception:
+                pass
+
+        ui.toolbar_reset.on_click(on_reset)
+
+        # 缩放/平移按钮（普通按钮，每次点击启用对应模式）
+        def on_zoom_click(btn):
+            try:
+                fig.update_layout(dragmode='zoom')
+            except Exception:
+                pass
+
+        def on_pan_click(btn):
+            try:
+                fig.update_layout(dragmode='pan')
+            except Exception:
+                pass
+
+        ui.toolbar_zoom.on_click(on_zoom_click)
+        ui.toolbar_pan.on_click(on_pan_click)
+
+        # 导出为 PNG（显示在 notebook 中）
+        def on_save(btn):
+            try:
+                # 使用 FigureWidget 的 to_image 方法（需要支持的后端，如 kaleido）
+                img_bytes = fig.to_image(format='png')
+                from IPython.display import display, Image
+                display(Image(img_bytes))
+            except Exception as e:
+                try:
+                    from IPython.display import display, HTML
+                    display(HTML(f"<pre style='color:red;'>导出失败: {e}</pre>"))
+                except Exception:
+                    pass
+
+        ui.toolbar_save.on_click(on_save)
+
+    def _bind_toolbar_actions(self):
+        """绑定 toolbar 按钮（一次性绑定），处理函数在点击时动态获取当前 FigureWidget"""
+        if getattr(self, '_toolbar_bound', False):
+            return
+        ui = self.ui_components
+
+        def get_current_fig():
+            try:
+                if ui.fig_container.children and len(ui.fig_container.children) > 0:
+                    return ui.fig_container.children[0]
+            except Exception:
+                pass
+            return None
+
+        def on_reset(btn):
+            fig = get_current_fig()
+            if fig is None:
+                return
+            try:
+                fig.update_xaxes(autorange=True)
+                fig.update_yaxes(autorange=True)
+            except Exception:
+                pass
+
+        def on_zoom_click(btn):
+            fig = get_current_fig()
+            if fig is None:
+                return
+            try:
+                fig.update_layout(dragmode='zoom')
+            except Exception:
+                pass
+
+        def on_pan_click(btn):
+            fig = get_current_fig()
+            if fig is None:
+                return
+            try:
+                fig.update_layout(dragmode='pan')
+            except Exception:
+                pass
+
+        def on_save(btn):
+            fig = get_current_fig()
+            if fig is None:
+                return
+            try:
+                img_bytes = fig.to_image(format='png')
+                from IPython.display import display, Image
+                display(Image(img_bytes))
+            except Exception as e:
+                try:
+                    from IPython.display import display, HTML
+                    display(HTML(f"<pre style='color:red;'>导出失败: {e}</pre>"))
+                except Exception:
+                    pass
+
+        # 新增：切换 Y 轴尺度（linear <-> log）
+        def on_toggle_yscale(btn):
+            fig = get_current_fig()
+            if fig is None:
+                return
+            try:
+                # 尝试读取当前 yaxis.type，默认 linear
+                current_type = getattr(getattr(fig.layout, 'yaxis', None), 'type', None) or 'linear'
+                new_type = 'log' if current_type != 'log' else 'linear'
+                fig.update_yaxes(type=new_type)
+            except Exception:
+                pass
+
+        # 新增：切换图例显示/隐藏
+        def on_toggle_legend(btn):
+            fig = get_current_fig()
+            if fig is None:
+                return
+            try:
+                current_show = bool(getattr(fig.layout, 'showlegend', True))
+                fig.update_layout(showlegend=not current_show)
+            except Exception:
+                pass
+
+        # 新增：显示/隐藏范围滑条（Range Slider）
+        def on_toggle_rangeslider(btn):
+            fig = get_current_fig()
+            if fig is None:
+                return
+            try:
+                # 尝试读取 xaxis.rangeslider.visible
+                xaxis = getattr(fig.layout, 'xaxis', None)
+                rangeslider = getattr(xaxis, 'rangeslider', None) if xaxis is not None else None
+                current_visible = bool(getattr(rangeslider, 'visible', False))
+                fig.update_layout(xaxis_rangeslider_visible=not current_visible)
+            except Exception:
+                pass
+
+        try:
+            ui.toolbar_reset.on_click(on_reset)
+            ui.toolbar_zoom.on_click(on_zoom_click)
+            ui.toolbar_pan.on_click(on_pan_click)
+            # 绑定新增按钮
+            if hasattr(ui, 'toolbar_toggle_yscale'):
+                ui.toolbar_toggle_yscale.on_click(on_toggle_yscale)
+            if hasattr(ui, 'toolbar_toggle_legend'):
+                ui.toolbar_toggle_legend.on_click(on_toggle_legend)
+            if hasattr(ui, 'toolbar_toggle_rangeslider'):
+                ui.toolbar_toggle_rangeslider.on_click(on_toggle_rangeslider)
+            ui.toolbar_save.on_click(on_save)
+            self._toolbar_bound = True
+        except Exception:
+            # 绑定失败时仍标记为未绑定以便后续重试
+            self._toolbar_bound = False
 
     def _set_fig_container(self):
         """设置fig_container的children并触发resize"""
@@ -119,6 +287,15 @@ class DynamicTrendWidget(VBox):
     def _init_ui(self):
         """初始化UI"""
         self.children = [self.ui_components.create_main_ui()]
+        # 如果用户指定了 figsize，则把主布局的右侧列宽固定为 figsize 的像素宽度，
+        # 这样图形区域宽度与 figsize 对齐，避免因容器宽度不足而出现水平滚动条。
+        try:
+            width_px = int(self.figsize[0] * 72)
+            if hasattr(self.ui_components, 'main_layout') and hasattr(self.ui_components.main_layout, 'layout'):
+                # main_layout 使用 grid_template_columns='300px 1fr'，替换为固定宽度
+                self.ui_components.main_layout.layout.grid_template_columns = f'300px {width_px}px'
+        except Exception:
+            pass
 
     def _refresh_y_axis_table(self):
         """刷新Y轴参数表格"""
