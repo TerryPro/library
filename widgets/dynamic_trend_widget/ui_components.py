@@ -74,11 +74,13 @@ class UIComponents:
         self.toolbar_toggle_legend = widgets.Button(description='切换图例', icon='list', layout=Layout(width='100px'))
         # 新增按钮：显示/隐藏范围滑条（Range Slider）
         self.toolbar_toggle_rangeslider = widgets.Button(description='范围滑条', icon='arrows-alt-h', layout=Layout(width='100px'))
+        # 新增按钮：切换标题显示/隐藏
+        self.toolbar_toggle_title = widgets.Button(description='切换标题', icon='heading', layout=Layout(width='100px'))
         self.toolbar_save = widgets.Button(description='PNG', icon='camera', layout=Layout(width='100px'))
         self.toolbar = HBox(
             [self.toolbar_reset, self.toolbar_zoom, self.toolbar_pan,
              self.toolbar_toggle_yscale, self.toolbar_toggle_legend, self.toolbar_toggle_rangeslider,
-             self.toolbar_save],
+             self.toolbar_toggle_title, self.toolbar_save],
             layout=Layout(width='100%', padding='6px 0', align_items='center', justify_content='flex-start')
         )
 

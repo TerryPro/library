@@ -249,6 +249,20 @@ class DynamicTrendWidget(VBox):
             except Exception:
                 pass
 
+        # 新增：切换标题显示/隐藏
+        def on_toggle_title(btn):
+            fig = get_current_fig()
+            if fig is None:
+                return
+            try:
+                # 读取当前 title 文本（若为空或 None 视为隐藏）
+                current_text = getattr(getattr(fig.layout, 'title', None), 'text', None) or ''
+                new_text = self.title if not current_text else ''
+                # 使用 title_text 以兼容性更新
+                fig.update_layout(title_text=new_text)
+            except Exception:
+                pass
+
         try:
             ui.toolbar_reset.on_click(on_reset)
             ui.toolbar_zoom.on_click(on_zoom_click)
@@ -260,6 +274,8 @@ class DynamicTrendWidget(VBox):
                 ui.toolbar_toggle_legend.on_click(on_toggle_legend)
             if hasattr(ui, 'toolbar_toggle_rangeslider'):
                 ui.toolbar_toggle_rangeslider.on_click(on_toggle_rangeslider)
+            if hasattr(ui, 'toolbar_toggle_title'):
+                ui.toolbar_toggle_title.on_click(on_toggle_title)
             ui.toolbar_save.on_click(on_save)
             self._toolbar_bound = True
         except Exception:
