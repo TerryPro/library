@@ -114,24 +114,30 @@ class StatisticsChartRenderer:
         # 行背景与对齐
         n_rows = len(row_labels)
         row_colors = ['#ffffff' if i % 2 == 0 else '#f7f9fc' for i in range(n_rows)]
-        cells_fill_colors = [row_colors] + [row_colors for _ in stats_df.columns]
+        # 首列为指标列，使用统一浅灰背景以便区分
+        first_col_colors = ['#f6f8fa'] * n_rows
+        cells_fill_colors = [first_col_colors] + [row_colors for _ in stats_df.columns]
         align_cols = ['left'] + ['right'] * len(stats_df.columns)
 
+        # 更精细的表头样式：统一深蓝色背景、白色较大字体、底部细边线，支持更好视觉层次
+        header_values = ["指标"] + list(stats_df.columns)
+        header_color = '#f6f8fa'
+        header_colors = [header_color] * len(header_values)
         table = go.Table(
             header=dict(
-                values=["指标"] + list(stats_df.columns),
-                fill_color='#2c3e50',
+                values=header_values,
+                fill_color=header_colors,
                 align='center',
-                font=dict(size=14, color='white', family='Arial'),
-                height=42,
-                line=dict(color='#cfd8e3', width=1)
+                font=dict(size=13, color='#000000', family='System-ui'),
+                height=36,
+                line=dict(color='#e6eef6', width=1.5)
             ),
             cells=dict(
                 values=col_values,
                 fill_color=cells_fill_colors,
-                align=align_cols,
-                font=dict(size=13, color='#17202a', family='Arial'),
-                height=34,
+                align='center',
+                font=dict(size=13, color='#17202a', family='System-ui'),
+                height=36,
                 line=dict(color='#e6eef6', width=1)
             )
         )
@@ -248,16 +254,7 @@ class StatisticsChartRenderer:
     def render_boxplot(self, boxplot_data: List[Dict[str, Any]], fig_container: widgets.Box) -> go.FigureWidget:
         """渲染箱线图"""
         if not boxplot_data:
-            fig = self.create_figure_widget()
-            fig.add_annotation(
-                text="没有数据可显示",
-                xref="paper", yref="paper",
-                x=0.5, y=0.5,
-                showarrow=False,
-                font=dict(size=14, color="gray")
-            )
-            fig_container.children = [fig]
-            return fig
+            return self._create_empty_figure(fig_container)
         # 采用两排布局：将参数平均分配到两行，子图间留出20px空隙
         n = len(boxplot_data)
         cols_per_row = math.ceil(n / 2)
@@ -303,22 +300,13 @@ class StatisticsChartRenderer:
         # 添加子图边框并设置白色背景
         self._apply_subplot_borders(fig, rows=rows, cols=cols_per_row)
 
-        fig_container.children = [go.FigureWidget(fig)]
-        return go.FigureWidget(fig)
+        fig_container.children = [fig]
+        return fig
 
     def render_histogram(self, columns: List[str], data_processor, fig_container: widgets.Box) -> go.FigureWidget:
         """渲染直方图"""
         if not columns:
-            fig = self.create_figure_widget()
-            fig.add_annotation(
-                text="没有数据可显示",
-                xref="paper", yref="paper",
-                x=0.5, y=0.5,
-                showarrow=False,
-                font=dict(size=14, color="gray")
-            )
-            fig_container.children = [fig]
-            return fig
+            return self._create_empty_figure(fig_container)
 
         # 两排布局：单行多列改为两行，子图间留出20px空隙
         cols = len(columns)
@@ -365,22 +353,13 @@ class StatisticsChartRenderer:
         self._apply_common_layout(fig, width=total_width, height=total_height, margin=dict(l=20, r=10, t=10, b=20))
         self._apply_subplot_borders(fig, rows=rows, cols=cols_per_row)
 
-        fig_container.children = [go.FigureWidget(fig)]
-        return go.FigureWidget(fig)
+        fig_container.children = [fig]
+        return fig
 
     def render_density_plot(self, columns: List[str], data_processor, fig_container: widgets.Box) -> go.FigureWidget:
         """渲染密度图"""
         if not columns:
-            fig = self.create_figure_widget()
-            fig.add_annotation(
-                text="没有数据可显示",
-                xref="paper", yref="paper",
-                x=0.5, y=0.5,
-                showarrow=False,
-                font=dict(size=14, color="gray")
-            )
-            fig_container.children = [fig]
-            return fig
+            return self._create_empty_figure(fig_container)
 
         # 两排布局：每列一个变量的密度曲线，子图间留出20px空隙
         cols = len(columns)
@@ -465,8 +444,8 @@ class StatisticsChartRenderer:
         except Exception:
             pass
 
-        fig_container.children = [go.FigureWidget(fig)]
-        return go.FigureWidget(fig)
+        fig_container.children = [fig]
+        return fig
 
     def render_chart(self, chart_type: str, data_processor, columns: List[str],
                     scatter_columns: Optional[Tuple[str, str]], fig_container: widgets.Box) -> go.FigureWidget:
